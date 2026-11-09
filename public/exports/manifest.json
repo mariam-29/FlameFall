@@ -1,0 +1,379 @@
+{
+  "catalog_version": "2026.11.14-66a836f1",
+  "sha256_hash": "66a836f1c212ef8648452c1f47d8d7b1b1e78ce5e852ffe7f7985ebc78603e74",
+  "counts": {
+    "sources": 9,
+    "investigations": 5,
+    "runs": 2,
+    "verified_runs": 2,
+    "provisional_runs": 0,
+    "published_pmma_cohort_runs": 24,
+    "phases": 4,
+    "evidence": 12,
+    "exclusions": 3
+  },
+  "sources": {
+    "SRC_BASSII_PSI25": {
+      "id": "SRC_BASSII_PSI25",
+      "publisher": "NASA Physical Sciences Informatics (PSI)",
+      "title": "Burning and Suppression of Solids - II (BASS-II) Dataset (PSI-25)",
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25",
+      "doi_or_ntrs_id": "10.60555/4qc4-de67",
+      "version": "PSI-25-v1.0",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "NASA Open Data / Public Domain (17 U.S.C. 105); cite DOI 10.60555/4qc4-de67",
+      "original_filenames": [
+        "BASS-II_Metadata_Summary.xlsx",
+        "BASS-II_Run_Operations_Log.csv"
+      ]
+    },
+    "SRC_BASSII_TM2021": {
+      "id": "SRC_BASSII_TM2021",
+      "publisher": "NASA Glenn Research Center",
+      "title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+      "url": "https://ntrs.nasa.gov/citations/20210011385",
+      "doi_or_ntrs_id": "NASA/TM-20210011385",
+      "version": "2021-Final",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "Public Domain NASA Technical Memorandum; cite NASA/TM-20210011385",
+      "original_filenames": [
+        "20210011385.pdf"
+      ]
+    },
+    "SRC_PMMA_CONCURRENT_PAPER": {
+      "id": "SRC_PMMA_CONCURRENT_PAPER",
+      "publisher": "NASA Glenn Research Center / NTRS",
+      "title": "Concurrent-Flow Flame Spread and Extinction over Cylindrical PMMA Rods in Microgravity (24-Test ISS Cohort and Drop-Tower Companion Tests)",
+      "url": "https://ntrs.nasa.gov/citations/20150008961",
+      "doi_or_ntrs_id": "NTRS-20150008961",
+      "version": "2015-NTRS",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "Public Domain NASA Technical Manuscript; keep ISS and Drop-Tower records separate; cite NTRS 20150008961",
+      "original_filenames": [
+        "20150008961.pdf"
+      ]
+    },
+    "SRC_SAFFIRE_I_PSI98": {
+      "id": "SRC_SAFFIRE_I_PSI98",
+      "publisher": "NASA Physical Sciences Informatics (PSI)",
+      "title": "Spacecraft Fire Experiment-I (Saffire-I) Dataset (PSI-98)",
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+      "doi_or_ntrs_id": "10.60555/0t15-1z43",
+      "version": "PSI-98-v1.0",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/0t15-1z43",
+      "original_filenames": [
+        "Saffire-I_Summary_Telemetry.csv"
+      ]
+    },
+    "SRC_SAMER_PSI101": {
+      "id": "SRC_SAMER_PSI101",
+      "publisher": "NASA Physical Sciences Informatics (PSI)",
+      "title": "Smoke Aerosol Measurement Experiment - Reflight (SAME-R) Dataset (PSI-101)",
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101",
+      "doi_or_ntrs_id": "10.60555/2np7-jv14",
+      "version": "PSI-101-v1.0",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/2np7-jv14",
+      "original_filenames": [
+        "SAME-R_Final_Report_Particle_Sizes.pdf"
+      ]
+    },
+    "SRC_FLEX_PSI69": {
+      "id": "SRC_FLEX_PSI69",
+      "publisher": "NASA Physical Sciences Informatics (PSI)",
+      "title": "Flame Extinguishment Experiment (FLEX) Dataset (PSI-69)",
+      "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+      "doi_or_ntrs_id": "10.60555/mbq8-0451",
+      "version": "PSI-69-v1.0",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/mbq8-0451",
+      "original_filenames": [
+        "FLEX_Droplet_Run_Table.csv"
+      ]
+    },
+    "SRC_LUCI_NTRS2025": {
+      "id": "SRC_LUCI_NTRS2025",
+      "publisher": "NASA Glenn Research Center / NTRS",
+      "title": "Lunar Gravity Combustion Investigation (LUCI): 4 mm Acrylic Rod and Cotton-Fiberglass Fabric Burned Simultaneously Aboard a Rotating New Shepard Sounding Rocket",
+      "url": "https://ntrs.nasa.gov/citations/20250010653",
+      "doi_or_ntrs_id": "NTRS-20250010653",
+      "version": "2025-NTRS",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "Public Domain NASA Presentation; cite NTRS 20250010653",
+      "original_filenames": [
+        "20250010653.pdf"
+      ]
+    },
+    "SRC_EXPLORATION_ATM_2024": {
+      "id": "SRC_EXPLORATION_ATM_2024",
+      "publisher": "NASA Johnson Space Center / NTRS",
+      "title": "Recommended Exploration Atmosphere for Crewed Lunar Surface Elements: 8.2 psia and 34% Oxygen",
+      "url": "https://ntrs.nasa.gov/citations/20240003211",
+      "doi_or_ntrs_id": "NTRS-20240003211",
+      "version": "2024-NTRS",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "Public Domain NASA Technical Report; cite NTRS 20240003211",
+      "original_filenames": [
+        "20240003211.pdf"
+      ]
+    },
+    "SRC_PARTIAL_G_REVIEW": {
+      "id": "SRC_PARTIAL_G_REVIEW",
+      "publisher": "NASA Glenn Research Center",
+      "title": "Partial-Gravity Fire Safety Review: Buoyancy-Enhanced Flammability Limits Between Microgravity and Earth Gravity",
+      "url": "https://ntrs.nasa.gov/citations/20220015800",
+      "doi_or_ntrs_id": "NTRS-20220015800",
+      "version": "2022-Review",
+      "accessed_date": "2026-11-09",
+      "reuse_terms": "Public Domain NASA Review; cite NTRS 20220015800",
+      "original_filenames": [
+        "Partial_Gravity_Fire_Safety_Review.pdf"
+      ]
+    }
+  },
+  "evidence_locators": {
+    "EV_BASSII_O15A": {
+      "evidence_id": "EV_BASSII_O15A",
+      "source_id": "SRC_BASSII_TM2021",
+      "source_title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+      "source_url": "https://ntrs.nasa.gov/citations/20210011385",
+      "doi_or_ntrs_id": "NASA/TM-20210011385",
+      "record_id": "BASSII_O15A",
+      "scope": "run",
+      "field_name": "initial_oxygen_pct",
+      "printed_page": "110",
+      "pdf_page": "122",
+      "locator_detail": "Appendix A, Olson Table A.5, Row O15a (printed pp. 110\u2013111), Sample 218m (clear 9.525 mm PMMA rod)",
+      "original_value": "15.6",
+      "original_unit": "% O2",
+      "normalized_value": 15.6,
+      "normalized_unit": "%",
+      "measurement_basis": "initial"
+    },
+    "EV_BASSII_O15B": {
+      "evidence_id": "EV_BASSII_O15B",
+      "source_id": "SRC_BASSII_TM2021",
+      "source_title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+      "source_url": "https://ntrs.nasa.gov/citations/20210011385",
+      "doi_or_ntrs_id": "NASA/TM-20210011385",
+      "record_id": "BASSII_O15B",
+      "scope": "run",
+      "field_name": "initial_oxygen_pct",
+      "printed_page": "111",
+      "pdf_page": "123",
+      "locator_detail": "Appendix A, Olson Table A.5, Row O15b (printed pp. 110\u2013111), Sample 218m (clear 9.525 mm PMMA rod)",
+      "original_value": "15.2",
+      "original_unit": "% O2",
+      "normalized_value": 15.2,
+      "normalized_unit": "%",
+      "measurement_basis": "initial"
+    },
+    "EV_BASSII_FIG64_SEQ": {
+      "evidence_id": "EV_BASSII_FIG64_SEQ",
+      "source_id": "SRC_BASSII_TM2021",
+      "source_title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+      "source_url": "https://ntrs.nasa.gov/citations/20210011385",
+      "doi_or_ntrs_id": "NASA/TM-20210011385",
+      "record_id": "FIG_6_4",
+      "scope": "phase",
+      "field_name": "oxygen_pct",
+      "printed_page": "69-71",
+      "pdf_page": "81-83",
+      "locator_detail": "Section 6.1, Figure 6.4 Staged-Flow PMMA Sequence (printed pp. 69\u201371)",
+      "original_value": "14.8",
+      "original_unit": "% O2",
+      "normalized_value": 14.8,
+      "normalized_unit": "%",
+      "measurement_basis": "initial"
+    },
+    "EV_BASSII_FIG64_FINAL": {
+      "evidence_id": "EV_BASSII_FIG64_FINAL",
+      "source_id": "SRC_BASSII_TM2021",
+      "source_title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+      "source_url": "https://ntrs.nasa.gov/citations/20210011385",
+      "doi_or_ntrs_id": "NASA/TM-20210011385",
+      "record_id": "FIG_6_4",
+      "scope": "phase",
+      "field_name": "final_oxygen_pct",
+      "printed_page": "69-71",
+      "pdf_page": "81-83",
+      "locator_detail": "Section 6.1, Figure 6.4 Endpoint Oxygen (printed pp. 69\u201371)",
+      "original_value": "13.6",
+      "original_unit": "% O2",
+      "normalized_value": 13.6,
+      "normalized_unit": "%",
+      "measurement_basis": "final"
+    },
+    "EV_PMMA_COHORT_24": {
+      "evidence_id": "EV_PMMA_COHORT_24",
+      "source_id": "SRC_PMMA_CONCURRENT_PAPER",
+      "source_title": "Concurrent-Flow Flame Spread and Extinction over Cylindrical PMMA Rods in Microgravity (24-Test ISS Cohort and Drop-Tower Companion Tests)",
+      "source_url": "https://ntrs.nasa.gov/citations/20150008961",
+      "doi_or_ntrs_id": "NTRS-20150008961",
+      "record_id": "BASS-II",
+      "scope": "study",
+      "field_name": "published_run_count",
+      "printed_page": "2-5",
+      "pdf_page": "2-5",
+      "locator_detail": "NTRS 20150008961, Section 2 & Table 1: 24-Test ISS Concurrent-Flow PMMA Cohort and Companion Drop-Tower Tests",
+      "original_value": "24",
+      "original_unit": "runs",
+      "normalized_value": 24,
+      "normalized_unit": "runs",
+      "measurement_basis": "measured"
+    },
+    "EV_SAFFIRE_I_SUMMARY": {
+      "evidence_id": "EV_SAFFIRE_I_SUMMARY",
+      "source_id": "SRC_SAFFIRE_I_PSI98",
+      "source_title": "Spacecraft Fire Experiment-I (Saffire-I) Dataset (PSI-98)",
+      "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+      "doi_or_ntrs_id": "10.60555/0t15-1z43",
+      "record_id": "Saffire-I",
+      "scope": "study",
+      "field_name": "airflow_cm_s",
+      "printed_page": "1",
+      "pdf_page": "1",
+      "locator_detail": "PSI-98 (DOI 10.60555/0t15-1z43) Investigation Summary & Cygnus Enclosure Telemetry",
+      "original_value": "20",
+      "original_unit": "cm/s",
+      "normalized_value": 20.0,
+      "normalized_unit": "cm/s",
+      "measurement_basis": "nominal"
+    },
+    "EV_SAMER_SUMMARY": {
+      "evidence_id": "EV_SAMER_SUMMARY",
+      "source_id": "SRC_SAMER_PSI101",
+      "source_title": "Smoke Aerosol Measurement Experiment - Reflight (SAME-R) Dataset (PSI-101)",
+      "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101",
+      "doi_or_ntrs_id": "10.60555/2np7-jv14",
+      "record_id": "SAME-R",
+      "scope": "study",
+      "field_name": "smoke_particle_size",
+      "printed_page": "12",
+      "pdf_page": "18",
+      "locator_detail": "PSI-101 (DOI 10.60555/2np7-jv14) Final Report, Section 3 Smoke Particle Size Distributions",
+      "original_value": "21.0",
+      "original_unit": "% O2",
+      "normalized_value": 21.0,
+      "normalized_unit": "%",
+      "measurement_basis": "nominal"
+    },
+    "EV_FLEX_SUMMARY": {
+      "evidence_id": "EV_FLEX_SUMMARY",
+      "source_id": "SRC_FLEX_PSI69",
+      "source_title": "Flame Extinguishment Experiment (FLEX) Dataset (PSI-69)",
+      "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+      "doi_or_ntrs_id": "10.60555/mbq8-0451",
+      "record_id": "FLEX",
+      "scope": "study",
+      "field_name": "droplet_extinction",
+      "printed_page": "2",
+      "pdf_page": "2",
+      "locator_detail": "PSI-69 (DOI 10.60555/mbq8-0451) FLEX Droplet Run Summary Table",
+      "original_value": "15.0",
+      "original_unit": "% O2",
+      "normalized_value": 15.0,
+      "normalized_unit": "%",
+      "measurement_basis": "initial"
+    },
+    "EV_LUCI_SUMMARY": {
+      "evidence_id": "EV_LUCI_SUMMARY",
+      "source_id": "SRC_LUCI_NTRS2025",
+      "source_title": "Lunar Gravity Combustion Investigation (LUCI): 4 mm Acrylic Rod and Cotton-Fiberglass Fabric Burned Simultaneously Aboard a Rotating New Shepard Sounding Rocket",
+      "source_url": "https://ntrs.nasa.gov/citations/20250010653",
+      "doi_or_ntrs_id": "NTRS-20250010653",
+      "record_id": "LUCI",
+      "scope": "shared_chamber",
+      "field_name": "rod_diameter_mm",
+      "printed_page": "6",
+      "pdf_page": "7",
+      "locator_detail": "NTRS 20250010653, Rotating New Shepard Sounding Rocket Flight Experiment",
+      "original_value": "4",
+      "original_unit": "mm",
+      "normalized_value": 4.0,
+      "normalized_unit": "mm",
+      "measurement_basis": "nominal"
+    },
+    "EV_EXPLORATION_ATM_2024": {
+      "evidence_id": "EV_EXPLORATION_ATM_2024",
+      "source_id": "SRC_EXPLORATION_ATM_2024",
+      "source_title": "Recommended Exploration Atmosphere for Crewed Lunar Surface Elements: 8.2 psia and 34% Oxygen",
+      "source_url": "https://ntrs.nasa.gov/citations/20240003211",
+      "doi_or_ntrs_id": "NTRS-20240003211",
+      "record_id": "illustrative_lunar_rover",
+      "scope": "study",
+      "field_name": "pressure_kpa",
+      "printed_page": "4",
+      "pdf_page": "4",
+      "locator_detail": "NTRS 20240003211, Table 1 Recommended Crewed Lunar Exploration Atmosphere (8.2 psia, 34% O2)",
+      "original_value": "8.2",
+      "original_unit": "psia",
+      "normalized_value": 56.5,
+      "normalized_unit": "kPa",
+      "measurement_basis": "assumed"
+    },
+    "EV_EXPLORATION_ATM_O2": {
+      "evidence_id": "EV_EXPLORATION_ATM_O2",
+      "source_id": "SRC_EXPLORATION_ATM_2024",
+      "source_title": "Recommended Exploration Atmosphere for Crewed Lunar Surface Elements: 8.2 psia and 34% Oxygen",
+      "source_url": "https://ntrs.nasa.gov/citations/20240003211",
+      "doi_or_ntrs_id": "NTRS-20240003211",
+      "record_id": "illustrative_lunar_rover",
+      "scope": "study",
+      "field_name": "oxygen_pct",
+      "printed_page": "4",
+      "pdf_page": "4",
+      "locator_detail": "NTRS 20240003211, Table 1 Recommended Crewed Lunar Exploration Oxygen Concentration (34% O2)",
+      "original_value": "34",
+      "original_unit": "% O2",
+      "normalized_value": 34.0,
+      "normalized_unit": "%",
+      "measurement_basis": "assumed"
+    },
+    "EV_PARTIAL_G_REVIEW": {
+      "evidence_id": "EV_PARTIAL_G_REVIEW",
+      "source_id": "SRC_PARTIAL_G_REVIEW",
+      "source_title": "Partial-Gravity Fire Safety Review: Buoyancy-Enhanced Flammability Limits Between Microgravity and Earth Gravity",
+      "source_url": "https://ntrs.nasa.gov/citations/20220015800",
+      "doi_or_ntrs_id": "NTRS-20220015800",
+      "record_id": "BASS-II",
+      "scope": "study",
+      "field_name": "gravity_regime",
+      "printed_page": "9",
+      "pdf_page": "11",
+      "locator_detail": "Section 4, Partial-Gravity Flammability Minimum & Buoyant Convection Crossover",
+      "original_value": "0.167",
+      "original_unit": "g",
+      "normalized_value": 0.167,
+      "normalized_unit": "g",
+      "measurement_basis": "modeled"
+    }
+  },
+  "exclusions": [
+    {
+      "exclusion_id": "EXCL_PMMA_24_COHORT_UNRECONCILED_ROWS",
+      "source_id": "SRC_PMMA_CONCURRENT_PAPER",
+      "candidate_row_ref": "NTRS 20150008961 24-Run Concurrent-Flow PMMA Cohort (22 Remaining ISS Runs & Short Drop-Tower Companion Runs)",
+      "review_status": "pending_human_review",
+      "reason": "While NTRS 20150008961 reports 24 ISS concurrent-flow PMMA tests and separate short drop-tower tests, only candidate rows O15a and O15b from Olson Table A.5 (NASA/TM-20210011385) have been individually cross-referenced in the initial reviewed run slice.",
+      "resolution_rule": "Keep published_run_count = 24 at the BASS-II study level and admit additional individual cohort runs into data/runs.csv only after two reviewers reconcile each original NASA run ID, calibration ID, and outcome against Table A.5 and PSI-25."
+    },
+    {
+      "exclusion_id": "EXCL_FIG64_INTERMEDIATE_QUANTITIES",
+      "source_id": "SRC_BASSII_TM2021",
+      "candidate_row_ref": "NASA/TM-20210011385 Section 6.1, Figure 6.4 Intermediate Stage Velocities and Elapsed Timestamps",
+      "review_status": "pending_human_review",
+      "reason": "Section 6.1 prose explicitly reports initial oxygen (14.8%) and final oxygen (13.6%) across the stepped-down airflow sequence, but intermediate stage oxygen percentages, exact step velocities, and elapsed times are not tabulated with exact numeric precision in the figure caption.",
+      "resolution_rule": "Ingest Figure 6.4 with 14.8% initial O2 and 13.6% final O2 while preserving explicit nulls for intermediate oxygen, elapsed_time_s, and airflow_cm_s, and keep run_id null until the underlying Table A.5 run ID is confirmed."
+    },
+    {
+      "exclusion_id": "EXCL_LUCI_RUN_LEVEL_TELEMETRY",
+      "source_id": "SRC_LUCI_NTRS2025",
+      "candidate_row_ref": "NTRS 20250010653 LUCI Sounding Rocket Shared-Chamber Burn",
+      "review_status": "excluded",
+      "reason": "LUCI burned a 4 mm acrylic rod and cotton-fiberglass fabric at the same time in a rotating New Shepard sounding rocket chamber; oxygen readings apply to the shared chamber rather than an isolated single-sample duct run.",
+      "resolution_rule": "Model LUCI as a published_reference investigation card with shared_chamber scope rather than pooling it as an isolated run row in data/runs.csv."
+    }
+  ]
+}
