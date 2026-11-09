@@ -127,7 +127,7 @@ export function resolveScenario(
       afterFreeText.pressure_psia === undefined)
   ) {
     afterFreeText.pressure_psia =
-      Math.round((afterFreeText.pressure_kpa / PSIA_TO_KPA) * 100) / 100;
+      Math.round((afterFreeText.pressure_kpa / PSIA_TO_KPA) * 10) / 10;
   } else if (
     afterFreeText.pressure_psia !== null &&
     afterFreeText.pressure_psia !== undefined &&

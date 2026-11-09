@@ -10,7 +10,10 @@ import {
   ScenarioApplicabilityResult,
   Source,
 } from "./schema";
-import { escapeHtml } from "./security";
+import {
+  detectUnsupportedSafeLimitQuery,
+  escapeHtml,
+} from "./security";
 
 export interface BoundEvidenceCitation {
   evidence_id: string;
@@ -160,8 +163,12 @@ export function buildGroundedContextAndAllowlist(
     }
   }
 
-  // 2. If BASS-II is top-ranked or selected runs belong to BASS-II, include Figure 6.4 final O2 too
-  if (relevantStudies.some((s) => s.investigation_id === "BASS-II")) {
+  // 2. If BASS-II is top-ranked, lunar rover context is active, or safe-limit query is asked, include BASS-II benchmark evidence
+  if (
+    relevantStudies.some((s) => s.investigation_id === "BASS-II") ||
+    scenario.gravity_regime === "lunar_1_6g" ||
+    detectUnsupportedSafeLimitQuery(scenario.question)
+  ) {
     addEv("EV_BASSII_FIG64_SEQ");
     addEv("EV_BASSII_FIG64_FINAL");
     addEv("EV_BASSII_O15A");
