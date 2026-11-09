@@ -1,0 +1,26 @@
+[
+  {
+    "exclusion_id": "EXCL_PMMA_24_COHORT_UNRECONCILED_ROWS",
+    "source_id": "SRC_PMMA_CONCURRENT_PAPER",
+    "candidate_row_ref": "NTRS 20150008961 24-Run Concurrent-Flow PMMA Cohort (22 Remaining ISS Runs & Short Drop-Tower Companion Runs)",
+    "review_status": "pending_human_review",
+    "reason": "While NTRS 20150008961 reports 24 ISS concurrent-flow PMMA tests and separate short drop-tower tests, only candidate rows O15a and O15b from Olson Table A.5 (NASA/TM-20210011385) have been individually cross-referenced in the initial reviewed run slice.",
+    "resolution_rule": "Keep published_run_count = 24 at the BASS-II study level and admit additional individual cohort runs into data/runs.csv only after two reviewers reconcile each original NASA run ID, calibration ID, and outcome against Table A.5 and PSI-25."
+  },
+  {
+    "exclusion_id": "EXCL_FIG64_INTERMEDIATE_QUANTITIES",
+    "source_id": "SRC_BASSII_TM2021",
+    "candidate_row_ref": "NASA/TM-20210011385 Section 6.1, Figure 6.4 Intermediate Stage Velocities and Elapsed Timestamps",
+    "review_status": "pending_human_review",
+    "reason": "Section 6.1 prose explicitly reports initial oxygen (14.8%) and final oxygen (13.6%) across the stepped-down airflow sequence, but intermediate stage oxygen percentages, exact step velocities, and elapsed times are not tabulated with exact numeric precision in the figure caption.",
+    "resolution_rule": "Ingest Figure 6.4 with 14.8% initial O2 and 13.6% final O2 while preserving explicit nulls for intermediate oxygen, elapsed_time_s, and airflow_cm_s, and keep run_id null until the underlying Table A.5 run ID is confirmed."
+  },
+  {
+    "exclusion_id": "EXCL_LUCI_RUN_LEVEL_TELEMETRY",
+    "source_id": "SRC_LUCI_NTRS2025",
+    "candidate_row_ref": "NTRS 20250010653 LUCI Sounding Rocket Shared-Chamber Burn",
+    "review_status": "excluded",
+    "reason": "LUCI burned a 4 mm acrylic rod and cotton-fiberglass fabric at the same time in a rotating New Shepard sounding rocket chamber; oxygen readings apply to the shared chamber rather than an isolated single-sample duct run.",
+    "resolution_rule": "Model LUCI as a published_reference investigation card with shared_chamber scope rather than pooling it as an isolated run row in data/runs.csv."
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "catalog_version": "2026.11.14-66a836f1",
+  "sha256_hash": "66a836f1c212ef8648452c1f47d8d7b1b1e78ce5e852ffe7f7985ebc78603e74",
+  "unit_normalizations": {
+    "oxygen_pct": "Volume percent (%). Fractions multiplied by 100.",
+    "pressure_kpa": "Absolute kilopascals (kPa). Converted from psia via x 6.894757. Unreported stays null.",
+    "airflow_cm_s": "Calibrated velocity in cm/s. Converted from m/s via x 100 only when calibration_id is present.",
+    "dimensions_mm": "Sample radius, diameter (2 * radius), and length in millimeters (mm)."
+  },
+  "null_semantics": "Null values indicate unreported or unmeasured quantities and never match each other in run comparisons.",
+  "counts_distinction": "published_pmma_cohort_runs (24) reflects the cohort count reported by NTRS 20150008961; verified_runs reflects rows individually verified in runs.csv; phases are tracked separately and never inflate run counts."
+}

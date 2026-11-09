@@ -1,0 +1,5 @@
+phase_id,run_id,figure_id,investigation_id,ordinal,elapsed_time_s,raw_flow_display,airflow_cm_s,oxygen_pct,oxygen_basis,observation,evidence_id,review_status
+PHASE_FIG64_1,,FIG_6_4,BASS-II,1,,step_1_initial,,14.8,initial,Initial stage in BASS-II Figure 6.4 (printed pp. 69-71) at 14.8% initial O2 before step-down airflow reductions; elapsed time and calibrated stage velocity unset pending row-level verification.,EV_BASSII_FIG64_SEQ,verified
+PHASE_FIG64_2,,FIG_6_4,BASS-II,2,,step_2_intermediate,,,staged,Intermediate downward airflow step in BASS-II Figure 6.4; intermediate oxygen percentage and elapsed time left null because only initial (14.8%) and final (13.6%) oxygen are explicitly stated in the figure prose.,EV_BASSII_FIG64_SEQ,verified
+PHASE_FIG64_3,,FIG_6_4,BASS-II,3,,step_3_intermediate,,,staged,Subsequent downward airflow step in BASS-II Figure 6.4; intermediate oxygen percentage and flow velocity left null.,EV_BASSII_FIG64_SEQ,verified
+PHASE_FIG64_4,,FIG_6_4,BASS-II,4,,step_4_final,,13.6,final,Final stage in BASS-II Figure 6.4 where oxygen reached 13.6% at the end of the stepped-down airflow sequence.,EV_BASSII_FIG64_SEQ,verified
