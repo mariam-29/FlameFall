@@ -1,2 +1,3 @@
-source_id,investigation_name,source_title,source_type,source_url,DOI,publisher,file_name,file_format,access_date,collection_status,notes
+source_id,investigation_name,source_title,source_type,source_url,DOI,publisher,file_name,file_format,access_date,collection_status,notes;
 BASSII_PSI25,BASS-II,Physical Sciences Informatics Dataset PSI-25,Dataset Landing Page,https://psi.nasa.gov/physci/repo/data/investigations/PSI-25,10.60555/4qc4-de67,NASA Physical Sciences Informatics,,HTML,2026-11-10,Identified,Version 4; License CC0-1.0
+"BASSII_TM20210011385,BASS-II,Burning and Suppression of Solids-II (BASS-II) Summary Report,NASA Technical Memorandum,https://ntrs.nasa.gov/citations/20210011385,,NASA,TM-20210011385.pdf,PDF,2026-11-10,Downloaded,NASA/TM-20210011385; October 2021";
