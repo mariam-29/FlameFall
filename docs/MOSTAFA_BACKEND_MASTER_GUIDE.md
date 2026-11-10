@@ -50,7 +50,7 @@ When the Express server starts, [`getCatalog()`](file:///d:/حاسبات ومع�
 
 ### 1.3 Two-Speed Decoupled API Architecture (`POST /api/evaluate` vs. `POST /api/explain`)
 - **Speed 1 (`POST /api/evaluate` — Instant Deterministic Path):** Executes purely in-memory mathematical ranking, run filtering, 2-run confounder comparison, and joint multi-condition applicability in **under `3 ms` end-to-end HTTP** (`p50 = 2.41 ms`). The frontend renders all tables, badges, score breakdowns, and evidence drawers immediately from this response.
-- **Speed 2 (`POST /api/explain` — Grounded AI Path with Automatic Fallback):** Runs asynchronously in parallel. Even if the external LLM provider (`gemini-2.5-flash`) takes seconds, times out (`> 5.5s`), is rate-limited, lacks an API key, or hallucinates an invalid citation/number, `/api/explain` automatically catches the failure and returns a deterministic, source-bound `reviewed_fallback` response (`HTTP 200`) so the user interface **never crashes or shows an empty error screen**.
+- **Speed 2 (`POST /api/explain` — Grounded AI Path with Automatic Fallback):** Runs asynchronously in parallel using a resilient Gemini model cascade (`gemini-3.1-flash-lite` -> `gemini-3.5-flash-lite` -> `gemini-3.8-flash`, automatically upgrading retired `gemini-2.5-*` names) with structured JSON schema enforcement (`responseSchema`). Even if the external LLM provider takes > `5.5s`, is rate-limited, lacks an API key, or fails citation/numeric validation, `/api/explain` automatically catches the failure and returns a deterministic, source-bound `reviewed_fallback` response (`HTTP 200`) so the user interface **never crashes or shows an empty error screen**.
 
 ---
 
@@ -283,3 +283,4 @@ When you unlock additional reviewed runs from the 24-run PMMA cohort (`NTRS 2015
 ### Q6: *"What happens if the Gemini API is down, slow, or rate-limited during live judging?"*
 **Winning Answer:**
 > "Our architecture is strictly two-speed. `POST /api/evaluate` is 100% deterministic and returns rankings, run comparisons, and applicability matrices in under `3 ms` without touching any external API. Meanwhile, `POST /api/explain` wraps the Gemini API call in a `5.5s` `AbortController` timeout and a serverless sliding-window rate limiter. If the API key is absent, rate-limited, times out, or fails citation validation, `/api/explain` seamlessly returns a pre-verified, source-bound `reviewed_fallback` explanation with `HTTP 200`."
+

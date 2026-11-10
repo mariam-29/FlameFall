@@ -151,6 +151,9 @@ export function buildGroundedContextAndAllowlist(
         allowedNumbers.add(parsedOrig);
       }
     }
+    for (const num of extractEmpiricalNumbersFromProse(resolved.reviewed_fact)) {
+      allowedNumbers.add(num);
+    }
   };
 
   // 1. Add evidence for top-ranked study and any study pinned for rover panel

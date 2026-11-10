@@ -40,24 +40,30 @@ import {
 
 const AI_TIMEOUT_MS = 5500;
 
+function sanitizeEnvValue(raw: string | undefined): string {
+  if (!raw) return "";
+  let val = raw.replace(/\r/g, "").trim();
+  if (
+    (val.startsWith('"') && val.endsWith('"')) ||
+    (val.startsWith("'") && val.endsWith("'"))
+  ) {
+    val = val.slice(1, -1).trim();
+  }
+  return val;
+}
+
 function loadDotEnvIfPresent(): void {
   const envPath = path.join(process.cwd(), ".env");
   if (!fs.existsSync(envPath)) return;
   try {
     const content = fs.readFileSync(envPath, "utf8");
     for (const rawLine of content.split(/\r?\n/)) {
-      const line = rawLine.trim();
+      const line = rawLine.replace(/\r/g, "").trim();
       if (!line || line.startsWith("#")) continue;
       const eqIdx = line.indexOf("=");
       if (eqIdx <= 0) continue;
       const key = line.slice(0, eqIdx).trim();
-      let val = line.slice(eqIdx + 1).trim();
-      if (
-        (val.startsWith('"') && val.endsWith('"')) ||
-        (val.startsWith("'") && val.endsWith("'"))
-      ) {
-        val = val.slice(1, -1);
-      }
+      const val = sanitizeEnvValue(line.slice(eqIdx + 1));
       if (process.env[key] === undefined && val.length > 0) {
         process.env[key] = val;
       }
@@ -68,6 +74,21 @@ function loadDotEnvIfPresent(): void {
 }
 
 loadDotEnvIfPresent();
+
+function getCandidateGeminiModels(rawModelEnv: string | undefined): string[] {
+  const cleaned = sanitizeEnvValue(rawModelEnv).replace(/^models\//i, "");
+  const isLegacyRetired =
+    !cleaned ||
+    /^gemini-(1\.5|2\.0|2\.5)\b/i.test(cleaned);
+  const preferred = isLegacyRetired ? "gemini-3.1-flash-lite" : cleaned;
+  const fallbacks = [
+    preferred,
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+  ];
+  return Array.from(new Set(fallbacks));
+}
 
 async function callLiveGeminiProvider(args: {
   scenario: ResolvedScenario;
@@ -81,9 +102,12 @@ async function callLiveGeminiProvider(args: {
   const timeoutId = setTimeout(() => controller.abort(), args.timeoutMs);
 
   try {
-    const allowedEvidenceSummary = Array.from(
-      args.allowlist.allowedEvidenceIds
-    ).map((id) => {
+    const cleanApiKey = sanitizeEnvValue(args.apiKey);
+    const allowedEvidenceIds = Array.from(args.allowlist.allowedEvidenceIds);
+    const allowedSourceIds = Array.from(args.allowlist.allowedSourceIds);
+    const allowedNumbers = Array.from(args.allowlist.allowedNumbers);
+
+    const allowedEvidenceSummary = allowedEvidenceIds.map((id) => {
       const item = args.allowlist.evidenceMap[id];
       return {
         evidence_id: id,
@@ -100,15 +124,14 @@ async function callLiveGeminiProvider(args: {
       };
     });
 
-    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     const systemInstruction = [
       "You are the NASA Flame Trace Scientific Evidence Synthesis Engine.",
       "CRITICAL RULES:",
       "1. You may ONLY cite evidence_ids and source_ids from ALLOWED_EVIDENCE.",
       "2. NEVER include raw URLs, markdown links, or inline DOIs in statement strings.",
-      "3. Every number in statement prose or numeric_facts MUST match the exact value and unit from ALLOWED_EVIDENCE.",
+      "3. In statement strings, ONLY use exact numerical digits that appear in ALLOWED_NUMBERS (or write words instead of digits). Copy facts closely from reviewed_fact in ALLOWED_EVIDENCE.",
       "4. Never treat null/unknown values as matching. Keep ISS microgravity, drop tower, and LUCI sounding-rocket shared-chamber results distinct.",
-      "5. If asked for a safe cabin setting or threshold, populate evidence_gap_warning.",
+      "5. Set evidence_gap_warning to null unless the user asks for a safe cabin setting or threshold.",
       "6. Output strictly valid JSON matching: { observed_findings: [...], applicability_limits: [...], missing_evidence: [...], evidence_gap_warning: string | null }.",
     ].join("\n");
 
@@ -121,41 +144,85 @@ async function callLiveGeminiProvider(args: {
       })),
       combination_tested: args.applicability.combination_tested,
       combination_message: args.applicability.combination_message,
+      ALLOWED_NUMBERS: allowedNumbers,
       ALLOWED_EVIDENCE: allowedEvidenceSummary,
     });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-        modelName
-      )}:generateContent?key=${encodeURIComponent(args.apiKey)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          contents: [{ role: "user", parts: [{ text: promptPayload }] }],
-          generationConfig: {
-            temperature: 0.0,
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
+    const claimSchema = {
+      type: "OBJECT",
+      properties: {
+        statement: { type: "STRING" },
+        evidence_ids: {
+          type: "ARRAY",
+          items: { type: "STRING", enum: allowedEvidenceIds },
+        },
+        source_ids: {
+          type: "ARRAY",
+          items: { type: "STRING", enum: allowedSourceIds },
+        },
+      },
+      required: ["statement", "evidence_ids", "source_ids"],
+    };
 
-    if (!response.ok) {
-      throw new Error(`Upstream model HTTP ${response.status}`);
+    const responseSchema = {
+      type: "OBJECT",
+      properties: {
+        observed_findings: { type: "ARRAY", items: claimSchema },
+        applicability_limits: { type: "ARRAY", items: claimSchema },
+        missing_evidence: { type: "ARRAY", items: claimSchema },
+        evidence_gap_warning: { type: "STRING", nullable: true },
+      },
+      required: [
+        "observed_findings",
+        "applicability_limits",
+        "missing_evidence",
+        "evidence_gap_warning",
+      ],
+    };
+
+    const candidateModels = getCandidateGeminiModels(process.env.GEMINI_MODEL);
+    let lastStatus = 0;
+
+    for (const modelName of candidateModels) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          modelName
+        )}:generateContent?key=${encodeURIComponent(cleanApiKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            contents: [{ role: "user", parts: [{ text: promptPayload }] }],
+            generationConfig: {
+              temperature: 0.0,
+              responseMimeType: "application/json",
+              responseSchema,
+            },
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const resultJson = (await response.json()) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        };
+        const rawText =
+          resultJson.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        return {
+          rawOutput: JSON.parse(rawText),
+          simulated: false,
+        };
+      }
+
+      lastStatus = response.status;
+      if (response.status !== 404 && response.status !== 503 && response.status !== 429) {
+        break;
+      }
     }
 
-    const resultJson = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const rawText =
-      resultJson.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    return {
-      rawOutput: JSON.parse(rawText),
-      simulated: false,
-    };
+    throw new Error(`Upstream model HTTP ${lastStatus}`);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -531,8 +598,11 @@ export function createApp(): express.Express {
       catalog
     );
 
-    const forceFallback = process.env.FORCE_FALLBACK_MODE === "true";
-    const apiKey = process.env.GEMINI_API_KEY ?? process.env.AI_API_KEY ?? "";
+    const forceFallback =
+      sanitizeEnvValue(process.env.FORCE_FALLBACK_MODE) === "true";
+    const apiKey = sanitizeEnvValue(
+      process.env.GEMINI_API_KEY ?? process.env.AI_API_KEY
+    );
     const customAdapter = getAIProviderAdapter();
     const clientIp =
       (typeof req.headers["x-forwarded-for"] === "string"
@@ -759,9 +829,10 @@ export function createApp(): express.Express {
   app.get("/api/health", (_req: Request, res: Response) => {
     const catalog = getCatalog();
     const hasAiKey = Boolean(
-      process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+      sanitizeEnvValue(process.env.GEMINI_API_KEY ?? process.env.AI_API_KEY)
     );
-    const forceFallback = process.env.FORCE_FALLBACK_MODE === "true";
+    const forceFallback =
+      sanitizeEnvValue(process.env.FORCE_FALLBACK_MODE) === "true";
 
     res
       .status(200)
