@@ -912,6 +912,115 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     expect(badRes.body.fallback_reason).toMatch(/model_validation_rejected/);
   });
 
+  it("Case #13: Live Gemini HTTP fetch adapter wiring (with 5.5s AbortController timeout) and lunar_rover + compare_run_ids smoke payload", async () => {
+    // 1. Verify smoke test payload with preset: "lunar_rover" and compare_run_ids: ["BASSII_O15A", "BASSII_O15B"]
+    const smokeEvalRes = await request(app)
+      .post("/api/evaluate")
+      .send({
+        scenario: {
+          preset: "lunar_rover",
+          task: "materials_and_ventilation",
+        },
+        compare_run_ids: ["BASSII_O15A", "BASSII_O15B"],
+      })
+      .expect(200);
+
+    expect(smokeEvalRes.body.resolved_scenario.preset_applied).toBe(
+      "illustrative_lunar_rover"
+    );
+    expect(smokeEvalRes.body.ranked_investigations[0].investigation_id).toBe(
+      "BASS-II"
+    );
+    expect(smokeEvalRes.body.run_comparison.status).toBe("compared");
+    expect(smokeEvalRes.body.run_comparison.run_a_id).toBe("BASSII_O15A");
+    expect(smokeEvalRes.body.run_comparison.run_b_id).toBe("BASSII_O15B");
+    expect(smokeEvalRes.body.applicability.combination_tested).toBe(false);
+
+    // 2. Verify GET /api/health reports live_ai_ready when GEMINI_API_KEY is configured
+    process.env.GEMINI_API_KEY = "AIzaSyTestLiveGeminiKeyForVerification";
+    const healthReady = await request(app).get("/api/health").expect(200);
+    expect(healthReady.body.ai_mode_configured).toBe("live_ai_ready");
+
+    // 3. Verify callLiveGeminiProvider executes real HTTP fetch with AbortSignal and validates output
+    const originalFetch = global.fetch;
+    let capturedUrl = "";
+    let capturedSignalPresent = false;
+    try {
+      global.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+        capturedUrl = String(input);
+        capturedSignalPresent = Boolean(init?.signal);
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        observed_findings: [
+                          {
+                            statement:
+                              "BASS-II runs O15a and O15b burned sample 218m at 3 cm/s and 1.5 cm/s opposing flow.",
+                            evidence_ids: ["EV_BASSII_O15A", "EV_BASSII_O15B"],
+                            source_ids: ["SRC_BASSII_TM2021"],
+                          },
+                        ],
+                        applicability_limits: [
+                          {
+                            statement:
+                              "LUCI burned a 4 mm PMMA rod in 21% O2 normal-pressure air at 101.3 kPa.",
+                            evidence_ids: ["EV_LUCI_SUMMARY"],
+                            source_ids: ["SRC_LUCI_NTRS2025"],
+                          },
+                        ],
+                        missing_evidence: [
+                          {
+                            statement:
+                              "No run in the catalog jointly tests 34% O2 and 56.5 kPa in lunar gravity.",
+                            evidence_ids: [
+                              "EV_EXPLORATION_ATM_O2",
+                              "EV_EXPLORATION_ATM_2024",
+                            ],
+                            source_ids: ["SRC_EXPLORATION_ATM_2024"],
+                          },
+                        ],
+                        evidence_gap_warning: null,
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }) as typeof fetch;
+
+      const liveFetchRes = await request(app)
+        .post("/api/explain")
+        .send({
+          question:
+            "What did NASA observe when airflow changed around burning acrylic on the ISS, and which parts of that evidence carry over to an illustrative lunar rover?",
+          scenario: {
+            preset: "lunar_rover",
+            task: "materials_and_ventilation",
+          },
+          compare_run_ids: ["BASSII_O15A", "BASSII_O15B"],
+        })
+        .expect(200);
+
+      expect(capturedUrl).toContain("generativelanguage.googleapis.com");
+      expect(capturedSignalPresent).toBe(true);
+      expect(liveFetchRes.body.mode).toBe("live_ai");
+      expect(liveFetchRes.body.provider_mode_detail).toBe("live_provider");
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
   it("Edge Cases: Oversized bodies (> 16 KiB) with and without Content-Length header, stale versions (409), unknown IDs (404), URL round-trip, pressure equivalence, rate limiting, and CSV/manifest consistency", async () => {
     // 1. Oversized body WITH Content-Length header
     const hugeQuestion = "A".repeat(18 * 1024);

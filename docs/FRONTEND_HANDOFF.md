@@ -12,7 +12,7 @@ This document provides the complete integration contract for the **Flame Trace (
 | `npm run dev` | Starts the Express server in watch mode on `http://localhost:4000` (configurable via `PORT`) |
 | `npm run typecheck` | Runs `tsc --noEmit` strict TypeScript validation |
 | `npm run build` | Compiles the data catalog and builds production JavaScript to `dist/` |
-| `npm start` | Runs the compiled production server (`node dist/src/server.js`) |
+| `npm start` | Runs the compiled production server (`node dist/server.js`) |
 | `npm test` | Compiles data and executes the 15-test Vitest verification & benchmark suite |
 | `npm run verify:all` | Runs `build:data`, `typecheck`, `test`, and `build` end-to-end |
 
