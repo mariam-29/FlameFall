@@ -20,16 +20,24 @@ flowchart TD
         PY --> EXP
     end
 
-    subgraph Runtime["2. Node.js + Express Runtime (Port 4000)"]
+    subgraph Runtime["2. Node.js + Express Layered Runtime (Port 4000)"]
         MEM["src/lib/catalog.ts\nIn-Memory Deep-Frozen Singleton\n- Verifies SHA-256 on startup\n- O(1) lookups (< 0.1 ms)"]
         CAT --> MEM
 
-        EVAL["POST /api/evaluate\nFast Deterministic Engine (< 3 ms HTTP)\n1. resolveScenario()\n2. rankInvestigations()\n3. compareRuns() & filterRuns()\n4. checkScenarioApplicability()"]
-        EXPL["POST /api/explain\n5-Step Grounded AI Synthesis\n1. Deterministic retrieval + Request Allowlist\n2. 5.5s AbortController Gemini Fetch\n3. validateModelExplanation() (IDs, units, numbers)\n4. Instant Reviewed Fallback on any failure"]
-        EXPRT["GET /api/export/:type\nVersion-stamped CSV & Manifest Downloads"]
+        APP["src/app.ts -> src/routes/api.routes.ts\nMiddlewares:\n- src/middlewares/securityHeaders.middleware.ts\n- src/middlewares/jsonBody.middleware.ts (16 KiB stream guard)"]
 
+        EVAL["src/controllers/evaluate.controller.ts\nPOST /api/evaluate (< 3 ms HTTP)\n1. resolveScenario()\n2. rankInvestigations()\n3. compareRuns() & filterRuns()\n4. checkScenarioApplicability()"]
+        EXPL["src/controllers/explain.controller.ts\nPOST /api/explain (5-Step Grounded AI)\n1. Deterministic retrieval + Request Allowlist\n2. src/services/gemini.service.ts (AbortController Fetch)\n3. validateModelExplanation() (IDs, units, numbers)\n4. Instant Reviewed Fallback on any failure"]
+        EXPRT["src/controllers/export.controller.ts\nGET /api/export/:type\nVersion-stamped CSV & Manifest Downloads"]
+        HLTH["src/controllers/health.controller.ts\nGET /api/health\nCatalog SHA-256 & AI Readiness Check"]
+
+        APP --> EVAL
+        APP --> EXPL
+        APP --> EXPRT
+        APP --> HLTH
         MEM --> EVAL
         MEM --> EXPL
+        MEM --> HLTH
         EXP --> EXPRT
     end
 ```
@@ -72,7 +80,16 @@ When the Express server starts, [`getCatalog()`](file:///d:/حاسبات ومع�
 | [`src/lib/evidence.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/lib/evidence.ts) | Request-scoped citation allowlist builder, LLM output validator, and reviewed fallback generator | `buildGroundedContextAndAllowlist()`, `validateModelExplanation()`, `buildReviewedFallbackExplanation()` | **In:** Model candidate JSON + `CitationAllowlist`<br>**Out:** Validated `ExplanationResponse` or rejection reason |
 | [`src/lib/security.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/lib/security.ts) | Input sanitization, prompt-injection detection, safety-limit query detection, rate limiting | `detectPromptInjection()`, `detectUnsupportedSafeLimitQuery()`, `checkServerlessRateLimit()`, `parseScenarioFromFreeText()` | Security verdicts & sanitized strings |
 | [`src/lib/url-state.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/lib/url-state.ts) | Shareable URL query-string serializer/parser that strips secrets and raw prompts | `serializeScenarioToSearchParams()`, `parseScenarioFromSearchParams()` | **In/Out:** `ScenarioInput` <-> URL query string |
-| [`src/app.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/app.ts) | Express application factory, 16 KiB raw stream body parser, live Gemini `fetch` adapter, and 4 routes | `createApp()`, `app`, `callLiveGeminiProvider()`, `strictJsonBodyMiddleware()` | Express HTTP handlers |
+| [`src/config/env.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/config/env.ts) | `.env` file loader, CRLF/quote sanitizer, and typed environment getters | `loadDotEnvIfPresent()`, `sanitizeEnvValue()`, `getPort()`, `getGeminiApiKey()`, `getCandidateGeminiModels()` | Trimmed runtime configuration |
+| [`src/middlewares/securityHeaders.middleware.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/middlewares/securityHeaders.middleware.ts) | Cross-Origin Resource Sharing (CORS), `OPTIONS` preflight, and `X-Content-Type-Options: nosniff` headers | `corsMiddleware()`, `securityHeadersMiddleware()` | Express request/response middleware |
+| [`src/middlewares/jsonBody.middleware.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/middlewares/jsonBody.middleware.ts) | `16 KiB` raw stream byte counter, strict JSON parser, and `404`/`409` entity/version validator | `strictJsonBodyMiddleware()`, `validateVersionAndIds()` | Rejects `> 16,384 B` payloads (`413`) & invalid JSON (`400`) |
+| [`src/services/gemini.service.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/services/gemini.service.ts) | Live Google Gemini `fetch` adapter with per-model `AbortController` timeout and model failover cascade | `callLiveGeminiProvider()`, `ProviderAdapter` | **In:** Scenario + Allowlist<br>**Out:** Raw candidate JSON |
+| [`src/controllers/health.controller.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/controllers/health.controller.ts) | `GET /api/health` controller reporting catalog SHA-256, counts, and AI readiness | `getHealthController()` | Express route controller |
+| [`src/controllers/evaluate.controller.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/controllers/evaluate.controller.ts) | `POST /api/evaluate` deterministic ranking, run comparison, applicability, and evidence drawer controller | `postEvaluateController()` | Express route controller |
+| [`src/controllers/explain.controller.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/controllers/explain.controller.ts) | `POST /api/explain` 5-step grounded AI orchestration, validation, and instant fallback controller | `createExplainController()`, `postExplainController` | Express route controller |
+| [`src/controllers/export.controller.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/controllers/export.controller.ts) | `GET /api/export/:type` verified researcher CSV & manifest download controller | `getExportController()`, `ALLOWED_EXPORTS` | Express route controller |
+| [`src/routes/api.routes.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/routes/api.routes.ts) | Express `/api` router mounting `/health`, `/evaluate`, `/explain`, and `/export/:type` | `createApiRouter()` | Express `Router` instance |
+| [`src/app.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/app.ts) | Slim Express application factory wiring middlewares and `/api` routes + backward-compatible re-exports | `createApp()`, `app`, re-exports | Express application & module barrel |
 | [`src/server.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/src/server.ts) | Production HTTP server entrypoint listening on `process.env.PORT || 4000` | Starts Express server | Binds port `4000` |
 | [`tests/backend.test.ts`](file:///d:/حاسبات ومعلومات/مشاريع/Nasa/tests/backend.test.ts) | Complete 16-test Vitest verification & latency benchmark suite | Cases `#1`–`#13`, Edge Cases, Compiler Gate, Latency Benchmark (`N=50`) | Automated CI/local verification |
 
