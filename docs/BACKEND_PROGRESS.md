@@ -1,20 +1,23 @@
 # Backend Implementation Progress
 
 ## Checkpoint
-- **Active Branches:** `backend` & `develop` (fully synced; `main` untouched at `3fcadaf`)
+- **Active Branches:** `backend` & `develop` (fully synced; `main` untouched at `fd4b829`)
 - **Catalog Version:** `2026.11.14-66a836f1` (`sha256: 66a836f15a94c518f0a4bc7213e4710bfbe772e2b54fd3183d08276511ff21bb`)
-- **Latest completed part:** `docs(master-guide): add Mostafa backend master guide, .env.example, and live Gemini fetch verification`
+- **Latest completed part:** `refactor(arch): modularize Express app into config, middlewares, services, controllers, and routes`
 
 ## Completed
-- `3fcadaf` (`main`) — `chore(repo): commit baseline playbook and master plan on main`
-- `5dfaecf` (`backend`) — `chore(init): scaffold Express TypeScript backend and shared Zod schemas` (`src/lib/schema.ts`, `src/lib/url-state.ts`)
-- `391a627` (`backend`) — `feat(data): build scientific catalog compiler and verified primary-source records` (`scripts/build_data.py`, `src/lib/catalog.ts`, `data/*`, `public/exports/*`)
-- `149a5a0` (`backend`) — `feat(eval): implement scenario resolution, relevance ranking, run comparison, and joint coverage` (`src/lib/security.ts`, `src/lib/rank.ts`, `src/lib/coverage.ts`)
-- `6f364d0` (`backend`) — `feat(api): expose Express evaluate, explain, export, and health routes with grounded AI validator` (`src/lib/evidence.ts`, `src/app.ts`, `src/server.ts`)
-- `14a0c02` (`backend`) — `test(backend): verify 12+ judging prompts, compiler gates, and HTTP benchmarks` (`tests/backend.test.ts`)
-- `e755cc1` (`backend`) — `docs(handoff): add frontend integration guide and release status` (`docs/FRONTEND_HANDOFF.md`)
-- `813d243` (`backend`) — `chore(checkpoint): save final backend session checkpoint`
-- `docs(master-guide): add Mostafa backend master guide, .env.example, and live Gemini fetch verification` — Added `docs/MOSTAFA_BACKEND_MASTER_GUIDE.md`, `.env.example`, automatic `.env` loading in `src/app.ts`, preset/compare_run_ids alias normalization (`lunar_rover`, `iss_acrylic`, `compare_run_ids`), and Case `#13` live Gemini HTTP `fetch` + `AbortController` verification (`16/16` tests passing).
+- `fd4b829` (`main`) — `chore(repo): commit baseline playbook and master plan on main`
+- `c5b5cf8` (`backend`) — `chore(init): scaffold Express TypeScript backend and shared Zod schemas` (`src/lib/schema.ts`, `src/lib/url-state.ts`)
+- `60e5575` (`backend`) — `feat(data): build scientific catalog compiler and verified primary-source records` (`scripts/build_data.py`, `src/lib/catalog.ts`, `data/*`, `public/exports/*`)
+- `31b5392` (`backend`) — `feat(eval): implement scenario resolution, relevance ranking, run comparison, and joint coverage` (`src/lib/security.ts`, `src/lib/rank.ts`, `src/lib/coverage.ts`)
+- `3692218` (`backend`) — `feat(api): expose Express evaluate, explain, export, and health routes with grounded AI validator` (`src/lib/evidence.ts`, `src/app.ts`, `src/server.ts`)
+- `342f4bc` (`backend`) — `test(backend): verify 12+ judging prompts, compiler gates, and HTTP benchmarks` (`tests/backend.test.ts`)
+- `b0c94fc` (`backend`) — `docs(handoff): add frontend integration guide and release status` (`docs/FRONTEND_HANDOFF.md`)
+- `a41d8ae` (`backend`) — `chore(checkpoint): save final backend session checkpoint`
+- `fe97009` (`backend`) — `docs(master-guide): add Mostafa backend master guide, .env.example, and live Gemini fetch verification`
+- `eb56254` (`backend`) — `fix(ai): trim .env values and add Gemini model cascade with 404/503 failover`
+- `9cc1902` (`backend`) — `perf(ai): remove slow dynamic responseSchema CFG compilation and add thinkingBudget:0 for <4s live_ai responses`
+- `refactor(arch): modularize Express app into config, middlewares, services, controllers, and routes` — Refactored `src/app.ts` into a clean layered architecture (`src/config/env.ts`, `src/middlewares/securityHeaders.middleware.ts`, `src/middlewares/jsonBody.middleware.ts`, `src/services/gemini.service.ts`, `src/controllers/{health,evaluate,explain,export}.controller.ts`, `src/routes/api.routes.ts`) while keeping `src/lib/*` untouched and preserving 100% backward-compatible re-exports in `src/app.ts` (`16/16` tests passing).
 
 ## In progress
 - None — Backend implementation, verification suite (`16/16` tests), frontend handoff guide, and Mostafa's master architecture guide are **100% complete**.
