@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { Duplex } from "node:stream";
 import { Application } from "express";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../src/app";
 import { getCatalog } from "../src/lib/catalog";
 import {
@@ -231,12 +231,22 @@ function request(expressApp: Application) {
 describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite", () => {
   const catalog = getCatalog();
 
+  beforeEach(() => {
+    setAIProviderAdapterForTests(null);
+    resetRateLimitStateForTests();
+    delete process.env.FORCE_FALLBACK_MODE;
+    delete process.env.PUBLIC_RATE_LIMIT_MAX;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.AI_API_KEY;
+  });
+
   afterEach(() => {
     setAIProviderAdapterForTests(null);
     resetRateLimitStateForTests();
     delete process.env.FORCE_FALLBACK_MODE;
     delete process.env.PUBLIC_RATE_LIMIT_MAX;
     delete process.env.GEMINI_API_KEY;
+    delete process.env.AI_API_KEY;
   });
 
   it("Case #1: Acrylic and ventilation -> BASS-II leads with a sourced reason", async () => {
