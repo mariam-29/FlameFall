@@ -38,7 +38,7 @@ import {
   MAX_PAYLOAD_BYTES,
 } from "./lib/security";
 
-const AI_TIMEOUT_MS = 5500;
+const AI_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS) || 12000;
 
 function sanitizeEnvValue(raw: string | undefined): string {
   if (!raw) return "";
@@ -57,6 +57,7 @@ function loadDotEnvIfPresent(): void {
   if (!fs.existsSync(envPath)) return;
   try {
     const content = fs.readFileSync(envPath, "utf8");
+    const isTestEnv = Boolean(process.env.VITEST);
     for (const rawLine of content.split(/\r?\n/)) {
       const line = rawLine.replace(/\r/g, "").trim();
       if (!line || line.startsWith("#")) continue;
@@ -64,7 +65,7 @@ function loadDotEnvIfPresent(): void {
       if (eqIdx <= 0) continue;
       const key = line.slice(0, eqIdx).trim();
       const val = sanitizeEnvValue(line.slice(eqIdx + 1));
-      if (process.env[key] === undefined && val.length > 0) {
+      if (val.length > 0 && (!isTestEnv || process.env[key] === undefined)) {
         process.env[key] = val;
       }
     }
@@ -98,92 +99,56 @@ async function callLiveGeminiProvider(args: {
   apiKey: string;
   timeoutMs: number;
 }): Promise<{ rawOutput: unknown; simulated: boolean }> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), args.timeoutMs);
+  const cleanApiKey = sanitizeEnvValue(args.apiKey);
+  const allowedEvidenceIds = Array.from(args.allowlist.allowedEvidenceIds);
+  const allowedSourceIds = Array.from(args.allowlist.allowedSourceIds);
+  const allowedNumbers = Array.from(args.allowlist.allowedNumbers);
 
-  try {
-    const cleanApiKey = sanitizeEnvValue(args.apiKey);
-    const allowedEvidenceIds = Array.from(args.allowlist.allowedEvidenceIds);
-    const allowedSourceIds = Array.from(args.allowlist.allowedSourceIds);
-    const allowedNumbers = Array.from(args.allowlist.allowedNumbers);
-
-    const allowedEvidenceSummary = allowedEvidenceIds.map((id) => {
-      const item = args.allowlist.evidenceMap[id];
-      return {
-        evidence_id: id,
-        source_id: item?.source_id,
-        record_id: item?.record_id,
-        scope: item?.scope,
-        field_name: item?.field_name,
-        reviewed_fact: item?.reviewed_fact,
-        original_value: item?.original_value,
-        original_unit: item?.original_unit,
-        normalized_value: item?.normalized_value,
-        normalized_unit: item?.normalized_unit,
-        measurement_basis: item?.measurement_basis,
-      };
-    });
-
-    const systemInstruction = [
-      "You are the NASA Flame Trace Scientific Evidence Synthesis Engine.",
-      "CRITICAL RULES:",
-      "1. You may ONLY cite evidence_ids and source_ids from ALLOWED_EVIDENCE.",
-      "2. NEVER include raw URLs, markdown links, or inline DOIs in statement strings.",
-      "3. In statement strings, ONLY use exact numerical digits that appear in ALLOWED_NUMBERS (or write words instead of digits). Copy facts closely from reviewed_fact in ALLOWED_EVIDENCE.",
-      "4. Never treat null/unknown values as matching. Keep ISS microgravity, drop tower, and LUCI sounding-rocket shared-chamber results distinct.",
-      "5. Set evidence_gap_warning to null unless the user asks for a safe cabin setting or threshold.",
-      "6. Output strictly valid JSON matching: { observed_findings: [...], applicability_limits: [...], missing_evidence: [...], evidence_gap_warning: string | null }.",
-    ].join("\n");
-
-    const promptPayload = JSON.stringify({
-      resolved_scenario: args.scenario,
-      top_ranked_studies: args.ranked.slice(0, 3).map((r) => ({
-        investigation_id: r.investigation_id,
-        score: r.study_relevance_score,
-        research_lead: r.research_lead,
-      })),
-      combination_tested: args.applicability.combination_tested,
-      combination_message: args.applicability.combination_message,
-      ALLOWED_NUMBERS: allowedNumbers,
-      ALLOWED_EVIDENCE: allowedEvidenceSummary,
-    });
-
-    const claimSchema = {
-      type: "OBJECT",
-      properties: {
-        statement: { type: "STRING" },
-        evidence_ids: {
-          type: "ARRAY",
-          items: { type: "STRING", enum: allowedEvidenceIds },
-        },
-        source_ids: {
-          type: "ARRAY",
-          items: { type: "STRING", enum: allowedSourceIds },
-        },
-      },
-      required: ["statement", "evidence_ids", "source_ids"],
+  const allowedEvidenceSummary = allowedEvidenceIds.map((id) => {
+    const item = args.allowlist.evidenceMap[id];
+    return {
+      evidence_id: id,
+      source_id: item?.source_id,
+      record_id: item?.record_id,
+      scope: item?.scope,
+      field_name: item?.field_name,
+      reviewed_fact: item?.reviewed_fact,
+      original_value: item?.original_value,
+      original_unit: item?.original_unit,
+      normalized_value: item?.normalized_value,
+      normalized_unit: item?.normalized_unit,
+      measurement_basis: item?.measurement_basis,
     };
+  });
 
-    const responseSchema = {
-      type: "OBJECT",
-      properties: {
-        observed_findings: { type: "ARRAY", items: claimSchema },
-        applicability_limits: { type: "ARRAY", items: claimSchema },
-        missing_evidence: { type: "ARRAY", items: claimSchema },
-        evidence_gap_warning: { type: "STRING", nullable: true },
-      },
-      required: [
-        "observed_findings",
-        "applicability_limits",
-        "missing_evidence",
-        "evidence_gap_warning",
-      ],
-    };
+  const systemInstruction = [
+    "You are the NASA Flame Trace Scientific Evidence Synthesis Engine.",
+    "Return a compact JSON object with EXACTLY these 4 keys:",
+    '{ "observed_findings": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "applicability_limits": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "missing_evidence": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "evidence_gap_warning": null }',
+    "CRITICAL RULES:",
+    `1. Each array (observed_findings, applicability_limits, missing_evidence) must have 1 or 2 concise items. You may ONLY use evidence_ids from: ${JSON.stringify(allowedEvidenceIds)} and source_ids from: ${JSON.stringify(allowedSourceIds)}.`,
+    "2. NEVER include raw URLs, markdown links, or inline DOIs in statement strings.",
+    `3. In statement strings, ONLY use exact numerical digits that appear in ALLOWED_NUMBERS: ${JSON.stringify(allowedNumbers)} (or write words instead of digits). Paraphrase directly from reviewed_fact in ALLOWED_EVIDENCE.`,
+    "4. Never treat null/unknown values as matching. Keep ISS microgravity, drop tower, and LUCI sounding-rocket shared-chamber results distinct.",
+    "5. Set evidence_gap_warning to null unless the user asks for a safe cabin setting or threshold.",
+  ].join("\n");
 
-    const candidateModels = getCandidateGeminiModels(process.env.GEMINI_MODEL);
-    let lastStatus = 0;
+  const promptPayload = JSON.stringify({
+    resolved_scenario: args.scenario,
+    combination_tested: args.applicability.combination_tested,
+    combination_message: args.applicability.combination_message,
+    ALLOWED_NUMBERS: allowedNumbers,
+    ALLOWED_EVIDENCE: allowedEvidenceSummary,
+  });
 
-    for (const modelName of candidateModels) {
+  const candidateModels = getCandidateGeminiModels(process.env.GEMINI_MODEL);
+  const perModelTimeoutMs = Math.min(Math.max(args.timeoutMs, 4000), 5000);
+  let lastErrorMsg = "Unknown upstream provider error";
+
+  for (const modelName of candidateModels) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), perModelTimeoutMs);
+    try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
           modelName
@@ -197,8 +162,9 @@ async function callLiveGeminiProvider(args: {
             contents: [{ role: "user", parts: [{ text: promptPayload }] }],
             generationConfig: {
               temperature: 0.0,
+              maxOutputTokens: 600,
               responseMimeType: "application/json",
-              responseSchema,
+              thinkingConfig: { thinkingBudget: 0 },
             },
           }),
         }
@@ -216,16 +182,25 @@ async function callLiveGeminiProvider(args: {
         };
       }
 
-      lastStatus = response.status;
-      if (response.status !== 404 && response.status !== 503 && response.status !== 429) {
+      lastErrorMsg = `Upstream model ${modelName} HTTP ${response.status}`;
+      if (
+        response.status !== 404 &&
+        response.status !== 503 &&
+        response.status !== 429
+      ) {
         break;
       }
+    } catch (err) {
+      lastErrorMsg =
+        err instanceof Error
+          ? `${modelName}: ${err.message}`
+          : `${modelName}: request failed`;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    throw new Error(`Upstream model HTTP ${lastStatus}`);
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  throw new Error(lastErrorMsg);
 }
 
 /**
