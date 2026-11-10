@@ -136,8 +136,12 @@ export type QualityFlag = z.infer<typeof QualityFlagSchema>;
 
 export const ScenarioPresetIdSchema = z.enum([
   "iss_acrylic_experiment",
+  "iss_acrylic",
+  "iss_acrylic_benchmark",
   "illustrative_lunar_rover",
+  "lunar_rover",
   "custom_scenario",
+  "custom",
 ]);
 export type ScenarioPresetId = z.infer<typeof ScenarioPresetIdSchema>;
 
@@ -360,6 +364,7 @@ export const ScenarioInputSchema = z
     pressure_psia: z.number().finite().min(0).max(75).nullable().optional(),
     airflow_cm_s: z.number().finite().min(0).max(500).nullable().optional(),
     selected_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
+    compare_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
   })
   .strict();
 export type ScenarioInput = z.infer<typeof ScenarioInputSchema>;
@@ -394,6 +399,7 @@ export const EvaluateRequestSchema = z
     question: z.string().max(500).nullable().optional(),
     run_filters: RunExplorerFilterSchema.optional(),
     selected_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
+    compare_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
     data_version: z.string().max(64).optional(),
     catalog_version: z.string().max(64).optional(),
   })
@@ -406,6 +412,7 @@ export const ExplainRequestSchema = z
     question: z.string().max(500).nullable().optional(),
     run_filters: RunExplorerFilterSchema.optional(),
     selected_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
+    compare_run_ids: z.array(z.string().min(1).max(64)).max(10).optional(),
     data_version: z.string().max(64).optional(),
     catalog_version: z.string().max(64).optional(),
   })

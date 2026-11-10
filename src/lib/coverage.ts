@@ -18,6 +18,26 @@ import { parseScenarioFromFreeText, stripControlAndHtml } from "./security";
 
 const PSIA_TO_KPA = 6.894757;
 
+function normalizePresetId(
+  preset: ScenarioPresetId | null | undefined
+): ScenarioPresetId | null {
+  if (!preset) return null;
+  if (
+    preset === "iss_acrylic" ||
+    preset === "iss_acrylic_benchmark" ||
+    preset === "iss_acrylic_experiment"
+  ) {
+    return "iss_acrylic_experiment";
+  }
+  if (preset === "lunar_rover" || preset === "illustrative_lunar_rover") {
+    return "illustrative_lunar_rover";
+  }
+  if (preset === "custom" || preset === "custom_scenario") {
+    return "custom_scenario";
+  }
+  return preset;
+}
+
 export function resolveScenario(
   rawScenario: ScenarioInput | undefined,
   topLevelQuestion: string | null | undefined,
@@ -25,6 +45,12 @@ export function resolveScenario(
   catalog: Catalog
 ): ResolvedScenario {
   const input: ScenarioInput = { ...(rawScenario ?? {}) };
+  if (input.preset !== undefined) {
+    input.preset = normalizePresetId(input.preset);
+  }
+  if (input.compare_run_ids !== undefined && input.selected_run_ids === undefined) {
+    input.selected_run_ids = input.compare_run_ids;
+  }
   if (topLevelQuestion !== undefined && input.question === undefined) {
     input.question = topLevelQuestion;
   }
@@ -37,14 +63,18 @@ export function resolveScenario(
   if (rawScenario) {
     for (const [key, val] of Object.entries(rawScenario)) {
       if (val !== undefined) {
-        explicitOverrides.add(key);
+        if (key === "compare_run_ids") {
+          explicitOverrides.add("selected_run_ids");
+        } else {
+          explicitOverrides.add(key);
+        }
       }
     }
   }
   if (topLevelQuestion !== undefined) explicitOverrides.add("question");
   if (topLevelSelectedRunIds !== undefined) explicitOverrides.add("selected_run_ids");
 
-  const presetId: ScenarioPresetId | null = input.preset ?? null;
+  const presetId: ScenarioPresetId | null = normalizePresetId(input.preset);
 
   // Start from an empty base and apply preset defaults if requested
   const base: ScenarioInput = {

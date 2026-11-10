@@ -40,6 +40,35 @@ import {
 
 const AI_TIMEOUT_MS = 5500;
 
+function loadDotEnvIfPresent(): void {
+  const envPath = path.join(process.cwd(), ".env");
+  if (!fs.existsSync(envPath)) return;
+  try {
+    const content = fs.readFileSync(envPath, "utf8");
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("#")) continue;
+      const eqIdx = line.indexOf("=");
+      if (eqIdx <= 0) continue;
+      const key = line.slice(0, eqIdx).trim();
+      let val = line.slice(eqIdx + 1).trim();
+      if (
+        (val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))
+      ) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] === undefined && val.length > 0) {
+        process.env[key] = val;
+      }
+    }
+  } catch {
+    // Ignore .env parse errors
+  }
+}
+
+loadDotEnvIfPresent();
+
 async function callLiveGeminiProvider(args: {
   scenario: ResolvedScenario;
   ranked: RankedInvestigationResult[];
@@ -232,7 +261,8 @@ function validateVersionAndIds(
     data_version?: string;
     catalog_version?: string;
     selected_run_ids?: string[];
-    scenario?: { selected_run_ids?: string[] };
+    compare_run_ids?: string[];
+    scenario?: { selected_run_ids?: string[]; compare_run_ids?: string[] };
     run_filters?: { investigation_id?: string };
   },
   res: Response
@@ -255,7 +285,9 @@ function validateVersionAndIds(
   const unknownIds: string[] = [];
   const allSelectedIds = [
     ...(reqData.selected_run_ids ?? []),
+    ...(reqData.compare_run_ids ?? []),
     ...(reqData.scenario?.selected_run_ids ?? []),
+    ...(reqData.scenario?.compare_run_ids ?? []),
   ];
 
   for (const rid of allSelectedIds) {
@@ -328,13 +360,14 @@ export function createApp(): express.Express {
       scenario: rawScenario,
       question,
       selected_run_ids,
+      compare_run_ids,
       run_filters,
     } = parsedReq.data;
 
     const resolvedScenario = resolveScenario(
       rawScenario,
       question,
-      selected_run_ids,
+      selected_run_ids ?? compare_run_ids,
       catalog
     );
 
@@ -453,6 +486,7 @@ export function createApp(): express.Express {
       scenario: rawScenario,
       question,
       selected_run_ids,
+      compare_run_ids,
       run_filters,
     } = parsedReq.data;
 
@@ -464,7 +498,7 @@ export function createApp(): express.Express {
     const resolvedScenario = resolveScenario(
       rawScenario,
       question,
-      selected_run_ids,
+      selected_run_ids ?? compare_run_ids,
       catalog
     );
 
