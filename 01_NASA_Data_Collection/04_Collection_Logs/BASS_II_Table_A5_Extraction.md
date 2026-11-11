@@ -216,7 +216,25 @@ Separate visual reviews were conducted for the O15a and O15b ProofSheets.
 - O15b ProofSheet.
 - BASS-II ProofSheet Visual Review.
 
+### Validation Against Original Report
+
+The extracted values for O15a and O15b were manually cross-checked against the original NASA/TM-20210011385 report, Table A.5.
+
+The following fields were verified for both test points:
+
+- Sample Number
+- Total Frames Shot
+- Final O2
+- Final CO
+- Fan Display
+- Air Display
+
+All checked values matched the original report.
+
+- Validation Status: Verified for the fields listed above.
+- Validation Method: Manual comparison with the original NASA report.
+
 ### Extraction Status
 
-Preliminary extraction. The recorded values must be validated against the original NASA report before being treated as final structured data.
+Preliminary extraction. Selected fields have been manually verified against the original NASA report. Remaining fields still require validation before being treated as final structured data.
 
