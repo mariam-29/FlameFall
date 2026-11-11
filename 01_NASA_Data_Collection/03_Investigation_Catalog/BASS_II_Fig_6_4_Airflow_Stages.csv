@@ -1,0 +1,6 @@
+investigation_id;sequence_id;stage;approx_start_from_ignition_s;approx_airflow_cm_s;oxygen_vol_pct;oxygen_basis;observation;source_id;source_locator
+BASS-II;BASSII_FIG_6_4;1;;4.5;14.8;Initial test setting;First plotted airflow plateau. Oxygen is reported for the test start.;BASSII_TM20210011385;Section 6.1 and Figure 6.4 (printed pp. 69-71)
+BASS-II;BASSII_FIG_6_4;2;320;2.1;;;First reduction visible in the plot. The prose refers to this plateau as 2 cm/s.;BASSII_TM20210011385;Section 6.1 and Figure 6.4 (printed pp. 69-71)
+BASS-II;BASSII_FIG_6_4;3;590;1.5;;;The report associates this reduction with the flame length ceasing to grow.;BASSII_TM20210011385;Section 6.1 and Figure 6.4 (printed pp. 69-71)
+BASS-II;BASSII_FIG_6_4;4;840;1.1;;;Third reduction visible in the plot.;BASSII_TM20210011385;Section 6.1 and Figure 6.4 (printed pp. 69-71)
+BASS-II;BASSII_FIG_6_4;5;1100;1.0;13.6;Final test reading;Quenching occurred more than 100 s after the last flow change. Oxygen is the final test reading.;BASSII_TM20210011385;Section 6.1 and Figure 6.4 (printed pp. 69-71)

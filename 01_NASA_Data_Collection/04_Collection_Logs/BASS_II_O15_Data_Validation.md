@@ -222,3 +222,18 @@ The following checks were completed:
 
 \- Full dataset validation: Not completed.
 
+## Table A.5 follow-up
+
+Rechecked the two rows and their column headings on printed p. 110 (PDF p. 118) of the [NASA report](../02_Original_Files/BASS_II/TM-20210011385.pdf). The original `initial_o2` and `final_o2` fields retain the uncalibrated readings in vol%. The catalog now also carries the report's calibrated readings.
+
+| Test | Uncalibrated O₂, initial → final (vol%) | Calibrated O₂, initial → final (vol%) | Extinction potentiometer setting |
+| --- | --- | --- | --- |
+| O15a | 16.0 → 15.6 | 17.1 → 16.7 | 0.32 |
+| O15b | 15.6 → 14.5 | 16.7 → 15.6 | 0.27 |
+
+The values currently served on `develop` (15.6 → 15.2 and 15.2 → 14.9) match neither column pair. Table A.5 reports 5 cm/s during the initial part of each test, then records the extinction endpoints as potentiometer settings. Sections 1.1 and 6.1 describe calibrating fan voltage against air velocity by operations day and flow restrictor. Both rows used restrictor 2 on GMT 209. The report and checked-in proof sheets did not yield a matching calibration curve for the low-flow endpoints, so the catalog retains the raw settings. The checks here cover oxygen and the reported settings. They do not replace the earlier review status for other fields.
+
+## Figure 6.4 staged airflow
+
+The [stage catalog](../03_Investigation_Catalog/BASS_II_Fig_6_4_Airflow_Stages.csv) follows the five plateaus of the red airflow trace on printed p. 71 (PDF p. 79). The values and transition times are approximate visual readings from the axes. The initial plateau start is blank because the trace starts after time zero. The text on pp. 69-70 supplies the initial and final oxygen values and reports that quenching occurred more than 100 s after the last airflow change. Intermediate oxygen values are blank. This sequence has a figure-based ID and is kept separate from O15a and O15b.
+

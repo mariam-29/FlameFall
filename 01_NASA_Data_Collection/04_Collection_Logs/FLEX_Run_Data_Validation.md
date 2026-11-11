@@ -17,3 +17,9 @@ Appendix B provides the per-test observations behind Table IX. Figure 5 describe
 Table IX allows some diameters to be extrapolated. The catalog preserves reported values and test-end labels without assigning a measurement method or extinction mechanism to each row.
 
 These five methanol tests form a baseline at 757.7–764.2 mmHg, with an initial oxygen mole fraction of 0.21 and zero reported CO₂ and He. The subset supports a baseline run comparison. Evaluating suppressant effects requires additional rows with varied gas composition and comparable fuel, pressure, oxygen, and initial diameter.
+
+## CO₂ comparison
+
+The [comparison catalog](../03_Investigation_Catalog/FLEX_Diluent_Comparison.csv) pairs FLEX-203 and FLEX-171 from Table IX. Both are free-floating methanol droplets at 21% initial oxygen, within 6.5 mmHg in pressure and 0.23 mm in initial diameter. The CO₂ fraction goes from zero to 0.15, replacing nitrogen. Both test ends are labeled Extinction, and Figures 206 and 174 describe diffusive extinction.
+
+The reported extinction diameter is 1.42 mm for FLEX-203 and 1.59 mm for FLEX-171. The latter is estimated by fitting the droplet history across a gap in camera visibility. The initial diameter, measurement method, and test date differ. The pair supports a descriptive comparison of reported outcomes. The two runs alone cannot isolate a CO₂ effect or establish a suppression threshold.
