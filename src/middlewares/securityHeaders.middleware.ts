@@ -2,7 +2,15 @@
 import cors from "cors";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 
-export const corsMiddleware: RequestHandler = cors();
+export const corsMiddleware: RequestHandler = cors({
+  exposedHeaders: [
+    "Content-Disposition",
+    "X-Catalog-Version",
+    "X-Catalog-SHA256",
+    "X-Runs-Count",
+    "X-Phases-Count",
+  ],
+});
 
 export function securityHeadersMiddleware(
   req: Request,

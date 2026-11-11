@@ -27,7 +27,9 @@ export const ALLOWED_EXPORTS: Readonly<
 
 export function getExportController(req: Request, res: Response): void {
   const type = String(req.params.type ?? "");
-  const spec = ALLOWED_EXPORTS[type];
+  const spec = Object.prototype.hasOwnProperty.call(ALLOWED_EXPORTS, type)
+    ? ALLOWED_EXPORTS[type]
+    : undefined;
 
   if (!spec) {
     res

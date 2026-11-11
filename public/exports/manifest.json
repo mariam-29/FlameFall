@@ -1,6 +1,6 @@
 {
-  "catalog_version": "2026.11.14-92dc5aa6",
-  "sha256_hash": "92dc5aa6e519d1b7b66151239494930420f54c7d1805be324b09b820cd59593a",
+  "catalog_version": "2026.11.14-cb422e52",
+  "sha256_hash": "cb422e52fa8870caa91a1c62ce3e15c4296498bc7800d51781ebc4fd0d5b65da",
   "counts": {
     "sources": 12,
     "investigations": 5,
@@ -402,7 +402,7 @@
       "candidate_row_ref": "NASA/TM-20210011385 Section 6.1, Figure 6.4 Intermediate Stage Velocities and Elapsed Timestamps",
       "review_status": "pending_human_review",
       "reason": "Section 6.1 prose explicitly reports initial oxygen (14.8%) and final oxygen (13.6%) across the stepped-down airflow sequence, but intermediate stage oxygen percentages, exact step velocities, and elapsed times are not tabulated with exact numeric precision in the figure caption.",
-      "resolution_rule": "Ingest Figure 6.4 with 14.8% initial O2 and 13.6% final O2 while preserving explicit nulls for intermediate oxygen, elapsed_time_s, and airflow_cm_s, and keep run_id null until the underlying Table A.5 run ID is confirmed."
+      "resolution_rule": "Keep intermediate oxygen and the underlying run ID null. Published plot readings for stage airflow and transition times are included as approximate estimates."
     },
     {
       "exclusion_id": "EXCL_LUCI_RUN_LEVEL_TELEMETRY",

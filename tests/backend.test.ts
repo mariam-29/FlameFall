@@ -1136,6 +1136,125 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     expect(healthRes.body.counts).toEqual(manifestRes.body.counts);
   });
 
+  it("carries the reviewed O15 values from evaluation through explanation and export", async () => {
+    process.env.FORCE_FALLBACK_MODE = "true";
+    const payload = { scenario: { preset: "iss_acrylic_experiment" } };
+    const evaluation = await request(app).post("/api/evaluate").send(payload).expect(200);
+    expect(evaluation.body.resolved_scenario).toMatchObject({
+      oxygen_pct: 17.1,
+      airflow_cm_s: null,
+      pressure_kpa: null,
+    });
+    expect(evaluation.body.filtered_runs).toMatchObject([
+      { run_id: "BASSII_O15A", initial_oxygen_pct: 17.1, final_oxygen_pct: 16.7, airflow_cm_s: null },
+      { run_id: "BASSII_O15B", initial_oxygen_pct: 16.7, final_oxygen_pct: 15.6, airflow_cm_s: null },
+    ]);
+    const explanation = await request(app)
+      .post("/api/explain")
+      .send({ ...payload, catalog_version: evaluation.body.catalog_version })
+      .expect(200);
+    expect(explanation.body.mode).toBe("reviewed_fallback");
+    expect(explanation.body.run_comparison).toEqual(evaluation.body.run_comparison);
+    expect(explanation.body.citations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ evidence_id: "EV_BASSII_O15A", normalized_value: 17.1, pdf_page: "118" }),
+      expect.objectContaining({ evidence_id: "EV_BASSII_O15B", normalized_value: 16.7, pdf_page: "118" }),
+    ]));
+    const exported = await request(app).get("/api/export/runs").expect(200);
+    expect(exported.headers["x-catalog-version"]).toBe(evaluation.body.catalog_version);
+    expect(exported.text).toContain("Extinction potentiometer 0.32");
+    expect(exported.text).toContain("Extinction potentiometer 0.27");
+  });
+
+  it.each([
+    ["larger_fire_spread", "Saffire-I", "EV_SAFFIRE_I_SUMMARY", "SRC_SAFFIRE_I_RESULTS", 1.8],
+    ["smoke_detection", "SAME-R", "EV_SAMER_SUMMARY", "SRC_SAMER_MEYER2018", 0.235],
+    ["suppression", "FLEX", "EV_FLEX_SUMMARY", "SRC_FLEX_TP", 21],
+  ])("serves reviewed %s evidence consistently in evaluation and fallback", async (task, study, evidenceId, sourceId, value) => {
+    process.env.FORCE_FALLBACK_MODE = "true";
+    const payload = { scenario: { task } };
+    const evaluation = await request(app).post("/api/evaluate").send(payload).expect(200);
+    expect(evaluation.body.ranked_investigations[0].investigation_id).toBe(study);
+    const citation = evaluation.body.evidence_drawers[study].find(
+      (item: { evidence_id: string }) => item.evidence_id === evidenceId
+    );
+    expect(citation).toMatchObject({ source_id: sourceId, normalized_value: value });
+    const explanation = await request(app)
+      .post("/api/explain")
+      .send({ ...payload, catalog_version: evaluation.body.catalog_version })
+      .expect(200);
+    expect(explanation.body.mode).toBe("reviewed_fallback");
+    expect(explanation.body.citations).toContainEqual(citation);
+    expect(explanation.body.explanation.observed_findings[0]).toMatchObject({
+      evidence_ids: [evidenceId],
+      source_ids: [sourceId],
+      numeric_facts: [expect.objectContaining({ evidence_id: evidenceId, value })],
+    });
+  });
+
+  it("treats a canonical ID and its original ID as the same pinned run", async () => {
+    const result = await request(app)
+      .post("/api/evaluate")
+      .send({ compare_run_ids: ["BASSII_O15A", "O15a"] })
+      .expect(200);
+    expect(result.body.run_comparison.status).toBe("no_comparable_pair");
+    expect(result.body.run_comparison.reason).toMatch(/two distinct run records/);
+  });
+
+  it("reports unavailable LUCI numeric pressure and retains the shared-chamber citation", async () => {
+    const result = await request(app)
+      .post("/api/evaluate")
+      .send({ scenario: { preset: "lunar_rover" } })
+      .expect(200);
+    const pressure = result.body.applicability.rows.find(
+      (row: { parameter: string }) => row.parameter === "pressure_kpa"
+    );
+    expect(pressure.study_comparisons).toContainEqual(expect.objectContaining({
+      investigation_id: "LUCI",
+      status: "unreported",
+    }));
+    expect(result.body.evidence_drawers.LUCI).toContainEqual(expect.objectContaining({
+      source_id: "SRC_LUCI_NTRS2025",
+      scope: "shared_chamber",
+    }));
+    expect(result.body.joint_match.combination_tested).toBe(false);
+  });
+
+  it("serves all advertised export files with matching catalog metadata and browser-readable headers", async () => {
+    const health = await request(app).get("/api/health").expect(200);
+    const { catalog_version, sha256_hash, counts, exports } = health.body;
+    const files = [
+      [exports.runs_csv, "runs.csv", "text/csv"],
+      [exports.phases_csv, "phases.csv", "text/csv"],
+      [exports.data_dictionary_json, "data_dictionary.json", "application/json"],
+      [exports.manifest_json, "manifest.json", "application/json"],
+    ];
+    for (const [route, filename, mediaType] of files) {
+      const result = await request(app).get(route).set("Origin", "http://localhost:3000").expect(200);
+      expect(result.headers["content-type"]).toContain(mediaType);
+      expect(result.headers["content-disposition"]).toContain(`${catalog_version}-${filename}`);
+      expect(result.headers["x-catalog-version"]).toBe(catalog_version);
+      expect(result.headers["x-catalog-sha256"]).toBe(sha256_hash);
+      expect(result.headers["x-runs-count"]).toBe(String(counts.verified_runs));
+      expect(result.headers["x-phases-count"]).toBe(String(counts.phases));
+      expect(result.headers["access-control-expose-headers"].toLowerCase().split(/,\s*/)).toEqual(
+        expect.arrayContaining(["content-disposition", "x-catalog-version", "x-catalog-sha256", "x-runs-count", "x-phases-count"])
+      );
+      expect(result.text).toBe(fs.readFileSync(path.join("public", "exports", filename), "utf8"));
+    }
+    const missing = await request(app).get("/api/export/unavailable").expect(404);
+    expect(missing.body.error).toMatch(/unknown export type/i);
+  });
+
+  it.each(["evaluate", "explain"])("rejects malformed JSON and invalid scenario fields on %s", async (endpoint) => {
+    const malformed = await request(app).post(`/api/${endpoint}`).send("{").expect(400);
+    expect(malformed.body.error).toMatch(/invalid json/i);
+    const invalid = await request(app)
+      .post(`/api/${endpoint}`)
+      .send({ scenario: { oxygen_pct: 101 } })
+      .expect(400);
+    expect(invalid.body.issues).toContainEqual(expect.objectContaining({ path: ["scenario", "oxygen_pct"] }));
+  });
+
   it("Compiler Gate: scripts/build_data.py rejects broken provenance, invalid units, and out-of-order phase ordinals", () => {
     const tmpDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "flame-trace-compiler-test-")

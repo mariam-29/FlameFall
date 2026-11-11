@@ -186,11 +186,13 @@ Content-Type: application/json
 
 ### 3.3 Export & Health Endpoints
 
-- `GET /api/health` — Returns `{ status: "ok", catalog_version, sha256_hash, counts, ai_provider_configured }`.
-- `GET /api/export/runs` — Downloads `runs.csv` with `X-Data-Version` and `X-Row-Count` headers.
-- `GET /api/export/phases` — Downloads `phases.csv` (Figure 6.4 multi-step flow sequence) with `X-Data-Version` and `X-Row-Count` headers.
-- `GET /api/export/dictionary` — Downloads `data_dictionary.json` with canonical units, tolerances, and schema documentation.
-- `GET /api/export/manifest` — Downloads `manifest.json` containing `catalog_version`, `sha256_hash`, `counts`, and per-file SHA-256 digests.
+- `GET /api/health` — Returns `status`, `catalog_version`, `sha256_hash`, `counts`, `ai_mode_configured`, and export URLs.
+- `GET /api/export/runs` — Downloads the verified run records as CSV.
+- `GET /api/export/phases` — Downloads the reviewed Figure 6.4 airflow stages as CSV.
+- `GET /api/export/dictionary` — Downloads the data dictionary with units, null semantics, and count definitions.
+- `GET /api/export/manifest` — Downloads the catalog version, catalog SHA-256, counts, sources, evidence, and exclusions.
+
+Export responses expose `Content-Disposition`, `X-Catalog-Version`, `X-Catalog-SHA256`, `X-Runs-Count`, and `X-Phases-Count` to browser clients.
 
 ---
 

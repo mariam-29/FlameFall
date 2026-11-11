@@ -347,7 +347,10 @@ export function compareRuns(
   catalog: Catalog,
   activeFilteredRuns?: readonly Run[]
 ): RunComparisonResult {
-  if (!runAId || !runBId || runAId.toLowerCase() === runBId.toLowerCase()) {
+  const runA = runAId ? findRunByIdOrOriginal(runAId, catalog) : undefined;
+  const runB = runBId ? findRunByIdOrOriginal(runBId, catalog) : undefined;
+
+  if (!runAId || !runBId || (runA && runA.run_id === runB?.run_id)) {
     return {
       status: "no_comparable_pair",
       reason:
@@ -366,9 +369,6 @@ export function compareRuns(
       },
     };
   }
-
-  const runA = findRunByIdOrOriginal(runAId, catalog);
-  const runB = findRunByIdOrOriginal(runBId, catalog);
 
   if (!runA || !runB) {
     return {
