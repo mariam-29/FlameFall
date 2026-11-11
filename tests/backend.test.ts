@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { Duplex } from "node:stream";
 import { Application } from "express";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../src/app";
 import { getCatalog } from "../src/lib/catalog";
 import {
@@ -20,6 +20,7 @@ import {
   validateModelExplanation,
 } from "../src/lib/evidence";
 import { rankInvestigations } from "../src/lib/rank";
+import { callLiveGeminiProvider } from "../src/services/gemini.service";
 import { Catalog, Run } from "../src/lib/schema";
 import { resetRateLimitStateForTests } from "../src/lib/security";
 import {
@@ -526,83 +527,33 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     expect(exportPhasesRes.text).toContain("13.6");
   });
 
-  it("Case #9: Ask for a safe cabin oxygen setting (including paraphrases) -> Returns evidence_gap_warning in both fallback and live_ai modes", async () => {
-    const paraphrases = [
-      "What is the safe cabin oxygen setting for a lunar rover?",
-      "At what oxygen level is it guaranteed not to burn in partial gravity?",
-      "Can you certify a maximum safe oxygen threshold for acrylic in 1/6 g?",
+  it("Case #9: Routes safe-threshold questions directly to the reviewed warning", async () => {
+    const provider = vi.fn(async () => ({
+      simulated: true,
+      rawOutput: { evidence_gap_warning: "Unreviewed provider warning." },
+    }));
+    setAIProviderAdapterForTests(provider);
+
+    const requests = [
+      { question: "What is the safe cabin oxygen setting for a lunar rover?" },
+      { question: "At what oxygen level is it guaranteed not to burn in partial gravity?" },
+      { question: "Can you certify a maximum safe oxygen threshold for acrylic in 1/6 g?" },
+      {
+        question: "What did the experiment observe?",
+        scenario: { question: "What is the safe cabin oxygen setting?" },
+      },
     ];
 
-    for (const q of paraphrases) {
-      const fbRes = await request(app)
-        .post("/api/explain")
-        .send({ question: q })
-        .expect(200);
-
-      expect(fbRes.body.mode).toBe("reviewed_fallback");
-      expect(fbRes.body.explanation.evidence_gap_warning).toMatch(
-        /EVIDENCE GAP WARNING/i
-      );
+    for (const payload of requests) {
+      const response = await request(app).post("/api/explain").send(payload).expect(200);
+      expect(response.body.mode).toBe("reviewed_fallback");
+      expect(response.body.fallback_reason).toBe("unsupported_safe_threshold_request");
+      expect(response.body.explanation.evidence_gap_warning).toMatch(/EVIDENCE GAP WARNING/i);
     }
-
-    // Also test in live_ai mode via simulated adapter that omits evidence_gap_warning
-    setAIProviderAdapterForTests(async () => ({
-      simulated: true,
-      rawOutput: {
-        observed_findings: [
-          {
-            statement:
-              "BASS-II Figure 6.4 showed quenching as oxygen dropped from 14.8% to 13.6%.",
-            evidence_ids: ["EV_BASSII_FIG64_SEQ", "EV_BASSII_FIG64_FINAL"],
-            source_ids: ["SRC_BASSII_TM2021"],
-            numeric_facts: [
-              {
-                label: "Initial O2",
-                value: 14.8,
-                unit: "%",
-                basis: "initial",
-                evidence_id: "EV_BASSII_FIG64_SEQ",
-              },
-            ],
-          },
-        ],
-        applicability_limits: [
-          {
-            statement:
-              "LUCI burned a 4 mm PMMA rod in normal-pressure air.",
-            evidence_ids: ["EV_LUCI_SUMMARY"],
-            source_ids: ["SRC_LUCI_NTRS2025"],
-          },
-        ],
-        missing_evidence: [
-          {
-            statement:
-              "No test covers 34.0% O2 at 56.5 kPa in lunar gravity.",
-            evidence_ids: [
-              "EV_EXPLORATION_ATM_O2",
-              "EV_EXPLORATION_ATM_2024",
-            ],
-            source_ids: ["SRC_EXPLORATION_ATM_2024"],
-          },
-        ],
-        evidence_gap_warning: null,
-      },
-    }));
-
-    const liveRes = await request(app)
-      .post("/api/explain")
-      .send({
-        question: "What is the safe cabin oxygen setting for a lunar rover?",
-      })
-      .expect(200);
-
-    expect(liveRes.body.mode).toBe("live_ai");
-    expect(liveRes.body.explanation.evidence_gap_warning).toMatch(
-      /EVIDENCE GAP WARNING/i
-    );
+    expect(provider).not.toHaveBeenCalled();
   });
 
-  it("Case #10: Rejects prompt override, fake DOI, valid-but-irrelevant evidence ID, right value with wrong unit, and unsupported prose numbers", async () => {
+  it("Case #10: Rejects prompt overrides and irrelevant evidence selections", async () => {
     // 10a. Prompt override in user input
     const overrideRes = await request(app)
       .post("/api/explain")
@@ -639,116 +590,21 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     );
 
     // 10b. Valid-but-irrelevant evidence ID (EV_FLEX_SUMMARY is a real catalog ID, but irrelevant to PMMA ventilation)
-    const irrelevantEvCandidate = {
-      observed_findings: [
-        {
-          statement: "Droplet burning was tested at 15.0% O2.",
-          evidence_ids: ["EV_FLEX_SUMMARY"],
-          source_ids: ["SRC_FLEX_TP"],
-        },
-      ],
-      applicability_limits: [
-        {
-          statement: "LUCI tested a 4 mm rod.",
-          evidence_ids: ["EV_LUCI_SUMMARY"],
-          source_ids: ["SRC_LUCI_NTRS2025"],
-        },
-      ],
-      missing_evidence: [
-        {
-          statement: "No match at 34.0% O2.",
-          evidence_ids: ["EV_EXPLORATION_ATM_O2"],
-          source_ids: ["SRC_EXPLORATION_ATM_2024"],
-        },
-      ],
-      evidence_gap_warning: null,
-    };
-    const checkIrrelevant = validateModelExplanation(
-      irrelevantEvCandidate,
-      allowlist
-    );
-    expect(checkIrrelevant.valid).toBe(false);
-    if (!checkIrrelevant.valid) {
-      expect(checkIrrelevant.reason).toMatch(/EV_FLEX_SUMMARY/);
-    }
-
-    // 10c. Right value with wrong unit (14.8 with unit "kPa" instead of "%")
-    const wrongUnitCandidate = {
-      observed_findings: [
-        {
-          statement: "Figure 6.4 started at 14.8.",
-          evidence_ids: ["EV_BASSII_FIG64_SEQ"],
-          source_ids: ["SRC_BASSII_TM2021"],
-          numeric_facts: [
-            {
-              label: "Initial Oxygen",
-              value: 14.8,
-              unit: "kPa", // WRONG UNIT!
-              basis: "initial",
-              evidence_id: "EV_BASSII_FIG64_SEQ",
-            },
-          ],
-        },
-      ],
-      applicability_limits: [
-        {
-          statement: "LUCI tested a 4 mm rod.",
-          evidence_ids: ["EV_LUCI_SUMMARY"],
-          source_ids: ["SRC_LUCI_NTRS2025"],
-        },
-      ],
-      missing_evidence: [
-        {
-          statement: "No match at 34.0% O2.",
-          evidence_ids: ["EV_EXPLORATION_ATM_O2"],
-          source_ids: ["SRC_EXPLORATION_ATM_2024"],
-        },
-      ],
-      evidence_gap_warning: null,
-    };
-    const checkWrongUnit = validateModelExplanation(
-      wrongUnitCandidate,
-      allowlist
-    );
-    expect(checkWrongUnit.valid).toBe(false);
-    if (!checkWrongUnit.valid) {
-      expect(checkWrongUnit.reason).toMatch(/Unit swap rejected/i);
-    }
-
-    // 10d. Unsupported number in prose ("99.7% O2")
-    const unbackedProseNumCandidate = {
-      observed_findings: [
-        {
-          statement:
-            "In BASS-II Figure 6.4, oxygen spiked to 99.7% during the burn.",
-          evidence_ids: ["EV_BASSII_FIG64_SEQ"],
-          source_ids: ["SRC_BASSII_TM2021"],
-        },
-      ],
-      applicability_limits: [
-        {
-          statement: "LUCI tested a 4 mm rod.",
-          evidence_ids: ["EV_LUCI_SUMMARY"],
-          source_ids: ["SRC_LUCI_NTRS2025"],
-        },
-      ],
-      missing_evidence: [
-        {
-          statement: "No match at 34.0% O2.",
-          evidence_ids: ["EV_EXPLORATION_ATM_O2"],
-          source_ids: ["SRC_EXPLORATION_ATM_2024"],
-        },
-      ],
-      evidence_gap_warning: null,
-    };
-    const checkUnbackedProse = validateModelExplanation(
-      unbackedProseNumCandidate,
-      allowlist
-    );
-    expect(checkUnbackedProse.valid).toBe(false);
-    if (!checkUnbackedProse.valid) {
-      expect(checkUnbackedProse.reason).toMatch(/Unsupported number '99.7'/);
-    }
+    const checkIrrelevant = validateModelExplanation({
+      observed_findings: ["EV_FLEX_SUMMARY"],
+      applicability_limits: ["EV_LUCI_SUMMARY"],
+      missing_evidence: ["EV_EXPLORATION_ATM_O2"],
+    }, allowlist);
+    expect(checkIrrelevant).toMatchObject({
+      valid: false,
+      reason: expect.stringContaining("EV_FLEX_SUMMARY"),
+    });
+    expect(validateModelExplanation({
+      observed_findings: ["EV_BASSII_FIG64_SEQ"],
+      applicability_limits: ["EV_LUCI_SUMMARY"],
+      missing_evidence: ["EV_EXPLORATION_ATM_O2"],
+      evidence_gap_warning: "Unreviewed provider warning.",
+    }, allowlist)).toMatchObject({ valid: false });
   });
 
   it("Case #11: Key absent, provider timeout, and provider failure -> Evaluate works; Explain returns task-appropriate reviewed_fallback", async () => {
@@ -795,68 +651,9 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     setAIProviderAdapterForTests(async () => ({
       simulated: true,
       rawOutput: {
-        observed_findings: [
-          {
-            statement:
-              "BASS-II Figure 6.4 recorded initial oxygen of 14.8% and final oxygen of 13.6% as airflow was reduced in steps.",
-            evidence_ids: ["EV_BASSII_FIG64_SEQ", "EV_BASSII_FIG64_FINAL"],
-            source_ids: ["SRC_BASSII_TM2021"],
-            numeric_facts: [
-              {
-                label: "Initial O2",
-                value: 14.8,
-                unit: "%",
-                basis: "initial",
-                evidence_id: "EV_BASSII_FIG64_SEQ",
-              },
-              {
-                label: "Final O2",
-                value: 13.6,
-                unit: "%",
-                basis: "final",
-                evidence_id: "EV_BASSII_FIG64_FINAL",
-              },
-            ],
-          },
-        ],
-        applicability_limits: [
-          {
-            statement:
-              "LUCI tested a 4 mm acrylic rod and fabric simultaneously in normal-pressure air.",
-            evidence_ids: ["EV_LUCI_SUMMARY"],
-            source_ids: ["SRC_LUCI_NTRS2025"],
-            numeric_facts: [
-              {
-                label: "LUCI Rod Diameter",
-                value: 4.0,
-                unit: "mm",
-                basis: "measured",
-                evidence_id: "EV_LUCI_SUMMARY",
-              },
-            ],
-          },
-        ],
-        missing_evidence: [
-          {
-            statement:
-              "No verified test covers 34.0% O2 and 56.5 kPa (8.2 psia) at lunar gravity.",
-            evidence_ids: [
-              "EV_EXPLORATION_ATM_O2",
-              "EV_EXPLORATION_ATM_2024",
-            ],
-            source_ids: ["SRC_EXPLORATION_ATM_2024"],
-            numeric_facts: [
-              {
-                label: "Exploration Pressure",
-                value: 8.2,
-                unit: "psia",
-                basis: "assumed",
-                evidence_id: "EV_EXPLORATION_ATM_2024",
-              },
-            ],
-          },
-        ],
-        evidence_gap_warning: null,
+        observed_findings: ["EV_BASSII_FIG64_SEQ", "EV_BASSII_FIG64_FINAL"],
+        applicability_limits: ["EV_LUCI_SUMMARY"],
+        missing_evidence: ["EV_EXPLORATION_ATM_2024"],
       },
     }));
 
@@ -875,33 +672,29 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     );
     expect(validRes.body.citations.length).toBeGreaterThanOrEqual(4);
 
-    // Now return bad provider output (embedded external link)
+    const oxygen = validRes.body.citations.find(
+      (citation: { evidence_id: string }) => citation.evidence_id === "EV_BASSII_FIG64_SEQ"
+    );
+    expect(validRes.body.explanation.observed_findings[0]).toMatchObject({
+      statement: oxygen.reviewed_fact,
+      source_ids: [oxygen.source_id],
+      numeric_facts: [{ value: 14.8, unit: "%", basis: "initial", evidence_id: oxygen.evidence_id }],
+    });
+    expect(validRes.body.explanation.evidence_gap_warning).toBe(
+      validRes.body.applicability.evidence_gap_summary
+    );
+
+    // Provider-generated claims and warnings are outside the evidence selection schema.
     setAIProviderAdapterForTests(async () => ({
       simulated: true,
       rawOutput: {
-        observed_findings: [
-          {
-            statement:
-              "See https://evil.example.com/fake-nasa for details.",
-            evidence_ids: ["EV_BASSII_FIG64_SEQ"],
-            source_ids: ["SRC_BASSII_TM2021"],
-          },
-        ],
-        applicability_limits: [
-          {
-            statement: "LUCI tested a 4 mm rod.",
-            evidence_ids: ["EV_LUCI_SUMMARY"],
-            source_ids: ["SRC_LUCI_NTRS2025"],
-          },
-        ],
-        missing_evidence: [
-          {
-            statement: "No match at 34.0% O2.",
-            evidence_ids: ["EV_EXPLORATION_ATM_O2"],
-            source_ids: ["SRC_EXPLORATION_ATM_2024"],
-          },
-        ],
-        evidence_gap_warning: null,
+        observed_findings: [{
+          statement: "LUCI measured 14.8 kPa.",
+          evidence_ids: ["EV_LUCI_SUMMARY"],
+          source_ids: ["SRC_BASSII_TM2021"],
+        }],
+        applicability_limits: ["EV_LUCI_SUMMARY"],
+        missing_evidence: ["EV_EXPLORATION_ATM_2024"],
       },
     }));
 
@@ -918,7 +711,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     expect(badRes.body.fallback_reason).toMatch(/model_validation_rejected/);
   });
 
-  it("Case #13: Live Gemini HTTP fetch adapter wiring (with 5.5s AbortController timeout) and lunar_rover + compare_run_ids smoke payload", async () => {
+  it("Case #13: Sends Gemini the evidence selection schema and returns a grounded explanation", async () => {
     // 1. Verify smoke test payload with preset: "lunar_rover" and compare_run_ids: ["BASSII_O15A", "BASSII_O15B"]
     const smokeEvalRes = await request(app)
       .post("/api/evaluate")
@@ -951,10 +744,12 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     const originalFetch = global.fetch;
     let capturedUrl = "";
     let capturedSignalPresent = false;
+    let generationConfig: unknown;
     try {
       global.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
         capturedUrl = String(input);
         capturedSignalPresent = Boolean(init?.signal);
+        generationConfig = JSON.parse(String(init?.body)).generationConfig;
         return new Response(
           JSON.stringify({
             candidates: [
@@ -963,34 +758,9 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
                   parts: [
                     {
                       text: JSON.stringify({
-                        observed_findings: [
-                          {
-                            statement:
-                              "BASS-II runs O15a and O15b burned sample 218m at calibrated initial oxygen of 17.1% and 16.7%.",
-                            evidence_ids: ["EV_BASSII_O15A", "EV_BASSII_O15B"],
-                            source_ids: ["SRC_BASSII_TM2021"],
-                          },
-                        ],
-                        applicability_limits: [
-                          {
-                            statement:
-                              "LUCI burned a 4 mm PMMA rod in normal-pressure air.",
-                            evidence_ids: ["EV_LUCI_SUMMARY"],
-                            source_ids: ["SRC_LUCI_NTRS2025"],
-                          },
-                        ],
-                        missing_evidence: [
-                          {
-                            statement:
-                              "No run in the catalog jointly tests 34% O2 and 56.5 kPa in lunar gravity.",
-                            evidence_ids: [
-                              "EV_EXPLORATION_ATM_O2",
-                              "EV_EXPLORATION_ATM_2024",
-                            ],
-                            source_ids: ["SRC_EXPLORATION_ATM_2024"],
-                          },
-                        ],
-                        evidence_gap_warning: null,
+                        observed_findings: ["EV_BASSII_O15A", "EV_BASSII_O15B"],
+                        applicability_limits: ["EV_LUCI_SUMMARY"],
+                        missing_evidence: ["EV_EXPLORATION_ATM_O2", "EV_EXPLORATION_ATM_2024"],
                       }),
                     },
                   ],
@@ -1020,10 +790,108 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
 
       expect(capturedUrl).toContain("generativelanguage.googleapis.com");
       expect(capturedSignalPresent).toBe(true);
+      expect(generationConfig).toMatchObject({
+        responseMimeType: "application/json",
+        responseJsonSchema: {
+          required: ["observed_findings", "applicability_limits", "missing_evidence"],
+          additionalProperties: false,
+          properties: {
+            observed_findings: {
+              type: "array",
+              items: { enum: expect.arrayContaining(["EV_BASSII_O15A"]) },
+            },
+          },
+        },
+      });
       expect(liveFetchRes.body.mode).toBe("live_ai");
       expect(liveFetchRes.body.provider_mode_detail).toBe("live_provider");
     } finally {
       global.fetch = originalFetch;
+    }
+  });
+
+  it.each([
+    ["What did methanol droplets do?", "methanol"],
+    ["What did heptane droplets do?", "heptane"],
+    ["How does gas dilution affect liquid droplets?", null],
+    ["Compare methanol and heptane droplets.", null],
+  ])("resolves droplet fuel from %s and uses FLEX evidence in fallback", async (question, material) => {
+    const { body } = await request(app).post("/api/explain").send({ question }).expect(200);
+    expect(body.resolved_scenario).toMatchObject({ material, geometry_shape: "droplet" });
+    expect(body.ranked_investigations[0].investigation_id).toBe("FLEX");
+    expect(body.mode).toBe("reviewed_fallback");
+    expect(body.citations.map((citation: { evidence_id: string }) => citation.evidence_id)).toEqual([
+      "EV_FLEX_SUMMARY",
+    ]);
+    expect(body.explanation.applicability_limits[0].statement).toMatch(/initial diameter/);
+    if (material === "heptane") {
+      expect(body.explanation.missing_evidence).toEqual(expect.arrayContaining([
+        expect.objectContaining({ statement: expect.stringContaining("heptane comparison") }),
+      ]));
+    }
+  });
+
+  it("browses without provider calls and explains explicitly selected runs", async () => {
+    const provider = vi.fn();
+    setAIProviderAdapterForTests(provider);
+    const blank = await request(app).post("/api/explain").send({}).expect(200);
+    expect(blank.body).toMatchObject({
+      fallback_reason: "insufficient_input",
+      explanation: {
+        observed_findings: [],
+        applicability_limits: [],
+        missing_evidence: [],
+        evidence_gap_warning: null,
+      },
+      citations: [],
+    });
+
+    const pinned = await request(app).post("/api/explain")
+      .send({ selected_run_ids: ["O15a", "BASSII_O15B"] }).expect(200);
+    expect(pinned.body.run_comparison.status).toBe("compared");
+    expect(pinned.body.explanation.observed_findings.map(
+      (claim: { evidence_ids: string[] }) => claim.evidence_ids[0]
+    )).toEqual(["EV_BASSII_O15A", "EV_BASSII_O15B"]);
+    expect(pinned.body.explanation.applicability_limits).toEqual(expect.arrayContaining([
+      expect.objectContaining({ statement: expect.stringMatching(/218m|repeated/i) }),
+    ]));
+    expect(provider).not.toHaveBeenCalled();
+  });
+
+  it("shares Gemini's deadline with retries and response body reads", async () => {
+    const scenario = resolveScenario({ task: "suppression" }, null, undefined, catalog);
+    const ranked = rankInvestigations(scenario, catalog);
+    const applicability = checkScenarioApplicability(scenario, catalog);
+    const allowlist = buildGroundedContextAndAllowlist(scenario, ranked, applicability, null, catalog);
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(global, "fetch");
+    try {
+      fetchMock.mockImplementationOnce(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 70));
+        return new Response(null, { status: 503 });
+      });
+      fetchMock.mockImplementationOnce(async (_url, options) => {
+        const signal = options!.signal!;
+        const response = new Response();
+        vi.spyOn(response, "json").mockImplementation(() => new Promise((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+        }));
+        return response;
+      });
+
+      const pending = callLiveGeminiProvider({
+        scenario, ranked, applicability, allowlist, apiKey: "test-key", timeoutMs: 100,
+      });
+      const assertion = expect(pending).rejects.toThrow("Gemini deadline exceeded after 100ms");
+      await vi.advanceTimersByTimeAsync(100);
+      await assertion;
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const firstSignal = fetchMock.mock.calls[0][1]?.signal;
+      expect(fetchMock.mock.calls[1][1]?.signal).toBe(firstSignal);
+      expect(firstSignal?.aborted).toBe(true);
+    } finally {
+      fetchMock.mockRestore();
+      vi.useRealTimers();
     }
   });
 

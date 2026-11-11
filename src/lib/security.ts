@@ -72,7 +72,8 @@ export function detectUnsupportedSafeLimitQuery(
   question: string | null | undefined
 ): boolean {
   if (!question) return false;
-  return SAFE_LIMIT_QUERY_PATTERNS.some((re) => re.test(question));
+  const cleaned = stripControlAndHtml(question);
+  return SAFE_LIMIT_QUERY_PATTERNS.some((re) => re.test(cleaned));
 }
 
 export function parseScenarioFromFreeText(
@@ -89,7 +90,7 @@ export function parseScenarioFromFreeText(
     if (/\b(smoke|particle\s*size|detector|aerosol|same-r|daft)\b/.test(cleaned)) {
       next.task = "smoke_detection";
     } else if (
-      /\b(suppress|suppression|dilution|extinguish|droplet|flex|heptane|methanol)\b/.test(
+      /\b(suppress|suppression|dilution|extinguish|droplets?|flex|heptane|methanol)\b/.test(
         cleaned
       )
     ) {
@@ -109,6 +110,9 @@ export function parseScenarioFromFreeText(
     }
   }
 
+  const namedFuels = new Set(cleaned.match(/\b(?:heptane|methanol)\b/g));
+  const dropletMentioned = /\bdroplets?\b/.test(cleaned) || namedFuels.size > 0;
+
   // Material synonym matching
   if (!next.material && !explicitOverrides.has("material")) {
     if (/\b(pmma|acrylic|plexiglas|polymethyl\s*methacrylate)\b/.test(cleaned)) {
@@ -121,12 +125,12 @@ export function parseScenarioFromFreeText(
       if (!next.geometry_shape && !explicitOverrides.has("geometry_shape")) {
         next.geometry_shape = "flat_sheet";
       }
-    } else if (/\b(heptane|methanol|liquid[\s-]*droplet|droplet)\b/.test(cleaned)) {
-      next.material = "heptane";
-      if (!next.geometry_shape && !explicitOverrides.has("geometry_shape")) {
-        next.geometry_shape = "droplet";
-      }
+    } else if (namedFuels.size === 1) {
+      next.material = Array.from(namedFuels)[0];
     }
+  }
+  if (dropletMentioned && !next.geometry_shape && !explicitOverrides.has("geometry_shape")) {
+    next.geometry_shape = "droplet";
   }
 
   // Gravity regime synonym matching

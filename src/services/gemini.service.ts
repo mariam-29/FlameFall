@@ -1,6 +1,6 @@
 // src/services/gemini.service.ts
 import { getCandidateGeminiModels, sanitizeEnvValue } from "../config/env";
-import { AIProviderAdapter, CitationAllowlist } from "../lib/evidence";
+import { AIProviderAdapter, buildModelExplanationJsonSchema, CitationAllowlist } from "../lib/evidence";
 import {
   RankedInvestigationResult,
   ResolvedScenario,
@@ -18,105 +18,92 @@ export async function callLiveGeminiProvider(args: {
   timeoutMs: number;
 }): Promise<{ rawOutput: unknown; simulated: boolean }> {
   const cleanApiKey = sanitizeEnvValue(args.apiKey);
-  const allowedEvidenceIds = Array.from(args.allowlist.allowedEvidenceIds);
-  const allowedSourceIds = Array.from(args.allowlist.allowedSourceIds);
-  const allowedNumbers = Array.from(args.allowlist.allowedNumbers);
-
-  const allowedEvidenceSummary = allowedEvidenceIds.map((id) => {
-    const item = args.allowlist.evidenceMap[id];
-    return {
-      evidence_id: id,
-      source_id: item?.source_id,
-      record_id: item?.record_id,
-      scope: item?.scope,
-      field_name: item?.field_name,
-      reviewed_fact: item?.reviewed_fact,
-      original_value: item?.original_value,
-      original_unit: item?.original_unit,
-      normalized_value: item?.normalized_value,
-      normalized_unit: item?.normalized_unit,
-      measurement_basis: item?.measurement_basis,
-    };
-  });
-
   const systemInstruction = [
-    "You are the NASA Flame Trace Scientific Evidence Synthesis Engine.",
-    "Return a compact JSON object with EXACTLY these 4 keys:",
-    '{ "observed_findings": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "applicability_limits": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "missing_evidence": [{ "statement": "...", "evidence_ids": ["..."], "source_ids": ["..."] }], "evidence_gap_warning": null }',
-    "CRITICAL RULES:",
-    `1. Each array (observed_findings, applicability_limits, missing_evidence) must have 1 or 2 concise items. You may ONLY use evidence_ids from: ${JSON.stringify(allowedEvidenceIds)} and source_ids from: ${JSON.stringify(allowedSourceIds)}.`,
-    "2. NEVER include raw URLs, markdown links, or inline DOIs in statement strings.",
-    `3. In statement strings, ONLY use exact numerical digits that appear in ALLOWED_NUMBERS: ${JSON.stringify(allowedNumbers)} (or write words instead of digits). Paraphrase directly from reviewed_fact in ALLOWED_EVIDENCE.`,
-    "4. Never treat null/unknown values as matching. Keep ISS microgravity, drop tower, and LUCI sounding-rocket shared-chamber results distinct.",
-    "5. Set evidence_gap_warning to null unless the user asks for a safe cabin setting or threshold.",
+    "Select reviewed evidence for a Flame Trace explanation.",
+    'Return exactly this JSON shape: {"observed_findings":["EVIDENCE_ID"],"applicability_limits":["EVIDENCE_ID"],"missing_evidence":["EVIDENCE_ID"]}.',
+    "Choose one or two distinct IDs per section using only the supplied evidence IDs.",
+    "Use experimental observations for findings and records that explain the scenario mismatch or evidence gap for the other sections.",
+    "Keep ISS microgravity, drop tower, and LUCI sounding-rocket shared-chamber evidence distinct.",
+    "The server renders the reviewed text, measurements, and sources for each selected ID.",
   ].join("\n");
 
   const promptPayload = JSON.stringify({
     resolved_scenario: args.scenario,
     combination_tested: args.applicability.combination_tested,
     combination_message: args.applicability.combination_message,
-    ALLOWED_NUMBERS: allowedNumbers,
-    ALLOWED_EVIDENCE: allowedEvidenceSummary,
+    evidence: Object.values(args.allowlist.evidenceMap).map(
+      ({ evidence_id, scope, reviewed_fact, measurement_basis }) => ({
+        evidence_id,
+        scope,
+        reviewed_fact,
+        measurement_basis,
+      })
+    ),
   });
 
   const candidateModels = getCandidateGeminiModels(process.env.GEMINI_MODEL);
-  const perModelTimeoutMs = Math.min(Math.max(args.timeoutMs, 4000), 5000);
+  const responseJsonSchema = buildModelExplanationJsonSchema(args.allowlist);
+  const controller = new AbortController();
+  const timeoutError = new Error(`Gemini deadline exceeded after ${args.timeoutMs}ms`);
+  const timeoutId = setTimeout(() => controller.abort(timeoutError), args.timeoutMs);
   let lastErrorMsg = "Unknown upstream provider error";
 
-  for (const modelName of candidateModels) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), perModelTimeoutMs);
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-          modelName
-        )}:generateContent?key=${encodeURIComponent(cleanApiKey)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            contents: [{ role: "user", parts: [{ text: promptPayload }] }],
-            generationConfig: {
-              temperature: 0.0,
-              maxOutputTokens: 600,
-              responseMimeType: "application/json",
-              thinkingConfig: { thinkingBudget: 0 },
+  try {
+    for (const modelName of candidateModels) {
+      controller.signal.throwIfAborted();
+      const thinkingLevel = modelName === "gemini-3.8-flash" ? "LOW"
+        : /^gemini-3\.[15]-flash-lite$/.test(modelName) ? "MINIMAL" : undefined;
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": cleanApiKey,
             },
-          }),
+            signal: controller.signal,
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemInstruction }] },
+              contents: [{ role: "user", parts: [{ text: promptPayload }] }],
+              generationConfig: {
+                temperature: 0.0,
+                maxOutputTokens: 600,
+                responseMimeType: "application/json",
+                responseJsonSchema,
+                ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
+              },
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const resultJson = (await response.json()) as {
+            candidates?: Array<{ content?: { parts?: Array<{ text?: string; thought?: boolean }> } }>;
+          };
+          controller.signal.throwIfAborted();
+          const rawText = resultJson.candidates?.[0]?.content?.parts
+            ?.filter((part) => !part.thought)
+            .map((part) => part.text ?? "")
+            .join("") ?? "";
+          return { rawOutput: JSON.parse(rawText), simulated: false };
         }
-      );
 
-      if (response.ok) {
-        const resultJson = (await response.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const rawText =
-          resultJson.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-        return {
-          rawOutput: JSON.parse(rawText),
-          simulated: false,
-        };
+        lastErrorMsg = `Upstream model ${modelName} HTTP ${response.status}`;
+        if (response.body) await response.body.cancel();
+        if (![404, 429, 503].includes(response.status)) break;
+      } catch (err) {
+        controller.signal.throwIfAborted();
+        lastErrorMsg =
+          err instanceof Error
+            ? `${modelName}: ${err.message}`
+            : `${modelName}: request failed`;
       }
-
-      lastErrorMsg = `Upstream model ${modelName} HTTP ${response.status}`;
-      if (
-        response.status !== 404 &&
-        response.status !== 503 &&
-        response.status !== 429
-      ) {
-        break;
-      }
-    } catch (err) {
-      lastErrorMsg =
-        err instanceof Error
-          ? `${modelName}: ${err.message}`
-          : `${modelName}: request failed`;
-    } finally {
-      clearTimeout(timeoutId);
     }
-  }
 
-  throw new Error(lastErrorMsg);
+    controller.signal.throwIfAborted();
+    throw new Error(lastErrorMsg);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

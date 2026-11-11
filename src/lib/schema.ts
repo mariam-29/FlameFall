@@ -550,8 +550,8 @@ export type NumericFact = z.infer<typeof NumericFactSchema>;
 export const CitedClaimSchema = z
   .object({
     statement: z.string().min(1).max(600),
-    evidence_ids: z.array(z.string().min(1).max(64)).min(1).max(10),
-    source_ids: z.array(z.string().min(1).max(64)).min(1).max(10),
+    evidence_ids: z.array(z.string().min(1).max(64)).max(10),
+    source_ids: z.array(z.string().min(1).max(64)).max(10),
     numeric_facts: z.array(NumericFactSchema).max(10).optional(),
   })
   .strict();
@@ -559,9 +559,9 @@ export type CitedClaim = z.infer<typeof CitedClaimSchema>;
 
 export const ExplanationResponseSchema = z
   .object({
-    observed_findings: z.array(CitedClaimSchema).min(1).max(6),
-    applicability_limits: z.array(CitedClaimSchema).min(1).max(6),
-    missing_evidence: z.array(CitedClaimSchema).min(1).max(6),
+    observed_findings: z.array(CitedClaimSchema).max(6),
+    applicability_limits: z.array(CitedClaimSchema).max(6),
+    missing_evidence: z.array(CitedClaimSchema).max(6),
     evidence_gap_warning: z.string().max(600).nullable(),
   })
   .strict();

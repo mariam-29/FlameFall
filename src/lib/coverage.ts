@@ -1118,7 +1118,9 @@ export function checkScenarioApplicability(
   }
 
   const combinationTested = exactMatchRunIds.length > 0;
-  const combinationMessage = combinationTested
+  const combinationMessage = resolvedScenario.scenario_state === "browse_or_insufficient_input"
+    ? "Choose a study objective, ask a question, or enter experimental conditions to evaluate coverage."
+    : combinationTested
     ? `${exactMatchRunIds.length} verified test(s) in this collection satisfy all entered criteria (${exactMatchRunIds.join(", ")}).`
     : approxMatchRunIds.length > 0
     ? `No verified test in this collection matches this exact combination (approximate near-matches within broader tolerance: ${approxMatchRunIds.join(", ")}).`

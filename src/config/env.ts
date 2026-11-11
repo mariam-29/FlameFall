@@ -59,7 +59,9 @@ export function isForceFallbackMode(): boolean {
 
 export function getAiTimeoutMs(): number {
   const parsed = Number(sanitizeEnvValue(process.env.AI_TIMEOUT_MS));
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 12000;
+  return Number.isInteger(parsed) && parsed > 0 && parsed <= 2_147_483_647
+    ? parsed
+    : 5500;
 }
 
 export function getCandidateGeminiModels(

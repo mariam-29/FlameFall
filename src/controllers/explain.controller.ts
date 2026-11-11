@@ -6,7 +6,7 @@ import {
   getGeminiApiKey,
   isForceFallbackMode,
 } from "../config/env";
-import { getCatalog } from "../lib/catalog";
+import { findRunByIdOrOriginal, getCatalog } from "../lib/catalog";
 import {
   checkScenarioApplicability,
   compareRuns,
@@ -16,6 +16,7 @@ import {
 import {
   BoundEvidenceCitation,
   buildGroundedContextAndAllowlist,
+  buildReviewedEvidenceGapWarning,
   buildReviewedFallbackExplanation,
   getAIProviderAdapter,
   resolveEvidenceById,
@@ -80,9 +81,11 @@ export function createExplainController(options?: ExplainControllerOptions) {
       run_filters,
     } = parsedReq.data;
 
-    const rawQuestionText = question ?? rawScenario?.question ?? null;
+    const rawQuestionText = rawScenario?.question ?? question ?? null;
     const injectionCheck = detectPromptInjection(rawQuestionText);
-    const isSafeLimitQuery = detectUnsupportedSafeLimitQuery(rawQuestionText);
+    const isSafeLimitQuery =
+      detectUnsupportedSafeLimitQuery(question) ||
+      detectUnsupportedSafeLimitQuery(rawScenario?.question);
 
     // Step 1 (Parse): Resolve scenario deterministically
     const resolvedScenario = resolveScenario(
@@ -141,40 +144,37 @@ export function createExplainController(options?: ExplainControllerOptions) {
     let finalExplanation: ExplanationResponse;
     let boundCitations: BoundEvidenceCitation[] = [];
 
+    const filteredRunIds = new Set(filteredRuns.map((run) => run.run_id));
+    const selectedRuns = Array.from(new Set(pinIds.flatMap((id) => {
+      const run = findRunByIdOrOriginal(id, catalog);
+      return run && filteredRunIds.has(run.run_id) ? [run] : [];
+    })));
+    const reviewedFallback = (reason: string, warn = isSafeLimitQuery) => {
+      fallbackReason = reason;
+      return buildReviewedFallbackExplanation({
+        scenario: resolvedScenario,
+        ranked: rankedInvestigations,
+        applicability,
+        selectedRuns,
+        comparison: runComparison,
+        catalog,
+        isSafeThresholdRequest: warn,
+      });
+    };
+
     if (injectionCheck.flagged) {
-      fallbackReason = `adversarial_input_blocked: ${injectionCheck.reason}`;
-      finalExplanation = buildReviewedFallbackExplanation(
-        resolvedScenario,
-        rankedInvestigations,
-        applicability,
-        true
-      );
+      finalExplanation = reviewedFallback(`adversarial_input_blocked: ${injectionCheck.reason}`, true);
+    } else if (isSafeLimitQuery) {
+      finalExplanation = reviewedFallback("unsupported_safe_threshold_request");
+    } else if (resolvedScenario.scenario_state === "browse_or_insufficient_input") {
+      finalExplanation = reviewedFallback(pinIds.length > 0 ? "selected_runs_only" : "insufficient_input");
     } else if (forceFallback) {
-      fallbackReason = "force_fallback_mode_enabled";
-      finalExplanation = buildReviewedFallbackExplanation(
-        resolvedScenario,
-        rankedInvestigations,
-        applicability,
-        isSafeLimitQuery
-      );
+      finalExplanation = reviewedFallback("force_fallback_mode_enabled");
     } else if (!rateLimit.allowed) {
-      fallbackReason = rateLimit.reason ?? "rate_limit_exceeded";
-      finalExplanation = buildReviewedFallbackExplanation(
-        resolvedScenario,
-        rankedInvestigations,
-        applicability,
-        isSafeLimitQuery
-      );
+      finalExplanation = reviewedFallback(rateLimit.reason ?? "rate_limit_exceeded");
     } else if (!apiKey && !customAdapter) {
-      fallbackReason = "missing_ai_api_key";
-      finalExplanation = buildReviewedFallbackExplanation(
-        resolvedScenario,
-        rankedInvestigations,
-        applicability,
-        isSafeLimitQuery
-      );
+      finalExplanation = reviewedFallback("missing_ai_api_key");
     } else {
-      // Step 3 & 4: Invoke provider (custom adapter or live Gemini) with 5500ms timeout and validate
       try {
         const providerFn = customAdapter ?? callLiveGeminiProvider;
         const { rawOutput, simulated } = await providerFn({
@@ -195,35 +195,18 @@ export function createExplainController(options?: ExplainControllerOptions) {
           finalExplanation = validation.data;
           boundCitations = validation.bound_citations;
 
-          // Guarantee that safe-cabin threshold requests ALWAYS emit evidence_gap_warning even in live_ai mode
-          if (isSafeLimitQuery && !finalExplanation.evidence_gap_warning) {
-            finalExplanation.evidence_gap_warning =
-              buildReviewedFallbackExplanation(
-                resolvedScenario,
-                rankedInvestigations,
-                applicability,
-                true
-              ).evidence_gap_warning;
-          }
-        } else {
-          fallbackReason = `model_validation_rejected: ${validation.reason}`;
-          finalExplanation = buildReviewedFallbackExplanation(
+          finalExplanation.evidence_gap_warning = buildReviewedEvidenceGapWarning(
             resolvedScenario,
-            rankedInvestigations,
             applicability,
-            isSafeLimitQuery
+            false
           );
+        } else {
+          finalExplanation = reviewedFallback(`model_validation_rejected: ${validation.reason}`);
         }
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "unknown_provider_error";
-        fallbackReason = `provider_error_or_timeout: ${msg}`;
-        finalExplanation = buildReviewedFallbackExplanation(
-          resolvedScenario,
-          rankedInvestigations,
-          applicability,
-          isSafeLimitQuery
-        );
+        finalExplanation = reviewedFallback(`provider_error_or_timeout: ${msg}`);
       }
     }
 

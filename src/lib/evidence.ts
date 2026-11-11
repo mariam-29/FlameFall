@@ -1,14 +1,15 @@
+import { z } from "zod";
 // src/lib/evidence.ts
 import {
   Catalog,
   Evidence,
   ExplanationResponse,
-  ExplanationResponseSchema,
+  CitedClaim,
   RankedInvestigationResult,
   ResolvedScenario,
+  Run,
   RunComparisonResult,
   ScenarioApplicabilityResult,
-  Source,
 } from "./schema";
 import {
   detectUnsupportedSafeLimitQuery,
@@ -40,8 +41,6 @@ export interface BoundEvidenceCitation {
 
 export interface CitationAllowlist {
   allowedEvidenceIds: ReadonlySet<string>;
-  allowedSourceIds: ReadonlySet<string>;
-  allowedNumbers: ReadonlySet<number>;
   evidenceMap: Record<string, BoundEvidenceCitation>;
 }
 
@@ -131,29 +130,13 @@ export function buildGroundedContextAndAllowlist(
   catalog: Catalog
 ): CitationAllowlist {
   const evidenceIds = new Set<string>();
-  const sourceIds = new Set<string>();
-  const allowedNumbers = new Set<number>();
+  const evidenceMap: Record<string, BoundEvidenceCitation> = {};
 
   const addEv = (eid: string) => {
     const resolved = resolveEvidenceById(eid, catalog);
     if (!resolved) return;
-    evidenceIds.add(resolved.evidence_id);
-    sourceIds.add(resolved.source_id);
-    if (
-      typeof resolved.normalized_value === "number" &&
-      Number.isFinite(resolved.normalized_value)
-    ) {
-      allowedNumbers.add(resolved.normalized_value);
-    }
-    if (resolved.original_value !== null) {
-      const parsedOrig = Number(resolved.original_value);
-      if (Number.isFinite(parsedOrig)) {
-        allowedNumbers.add(parsedOrig);
-      }
-    }
-    for (const num of extractEmpiricalNumbersFromProse(resolved.reviewed_fact)) {
-      allowedNumbers.add(num);
-    }
+    evidenceIds.add(eid);
+    evidenceMap[eid] = resolved;
   };
 
   // 1. Add evidence for top-ranked study and any study pinned for rover panel
@@ -177,8 +160,6 @@ export function buildGroundedContextAndAllowlist(
     addEv("EV_BASSII_O15A");
     addEv("EV_BASSII_O15B");
     addEv("EV_PMMA_COHORT_24");
-    allowedNumbers.add(9.525);
-    allowedNumbers.add(4.7625);
   }
 
   // 3. Add evidence for explicitly selected/compared runs
@@ -200,61 +181,56 @@ export function buildGroundedContextAndAllowlist(
   addEv("EV_EXPLORATION_ATM_2024");
   addEv("EV_EXPLORATION_ATM_O2");
   addEv("EV_PARTIAL_G_REVIEW");
-  allowedNumbers.add(4.0);
+  return { allowedEvidenceIds: evidenceIds, evidenceMap };
+}
 
-  if (scenario.oxygen_pct !== null && scenario.oxygen_pct !== undefined) {
-    allowedNumbers.add(scenario.oxygen_pct);
-  }
-  if (scenario.pressure_kpa !== null && scenario.pressure_kpa !== undefined) {
-    allowedNumbers.add(scenario.pressure_kpa);
-  }
-  if (scenario.pressure_psia !== null && scenario.pressure_psia !== undefined) {
-    allowedNumbers.add(scenario.pressure_psia);
-  }
-  if (scenario.airflow_cm_s !== null && scenario.airflow_cm_s !== undefined) {
-    allowedNumbers.add(scenario.airflow_cm_s);
-  }
+const MAX_EVIDENCE_PER_SECTION = 6;
+const EvidenceSelectionSchema = z
+  .array(z.string().min(1).max(64))
+  .min(1)
+  .max(MAX_EVIDENCE_PER_SECTION);
 
-  const evidenceMap: Record<string, BoundEvidenceCitation> = {};
-  for (const eid of evidenceIds) {
-    const resolved = resolveEvidenceById(eid, catalog);
-    if (resolved) {
-      evidenceMap[eid] = resolved;
-    }
-  }
+const ModelExplanationSchema = z.object({
+  observed_findings: EvidenceSelectionSchema,
+  applicability_limits: EvidenceSelectionSchema,
+  missing_evidence: EvidenceSelectionSchema,
+}).strict();
 
+export function buildModelExplanationJsonSchema(allowlist: CitationAllowlist) {
+  const sections = Object.keys(ModelExplanationSchema.shape);
+  const selection = {
+    type: "array",
+    minItems: 1,
+    maxItems: MAX_EVIDENCE_PER_SECTION,
+    items: { type: "string", enum: Array.from(allowlist.allowedEvidenceIds) },
+  };
   return {
-    allowedEvidenceIds: evidenceIds,
-    allowedSourceIds: sourceIds,
-    allowedNumbers,
-    evidenceMap,
+    type: "object",
+    properties: Object.fromEntries(sections.map((section) => [section, selection])),
+    required: sections,
+    additionalProperties: false,
   };
 }
 
-function unitsAreCompatible(unitA: string, unitB: string): boolean {
-  const norm = (u: string) =>
-    u
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/%o2|vol%|percent|pct/g, "%");
-  return norm(unitA) === norm(unitB);
-}
-
-const URL_OR_MARKDOWN_LINK_REGEX =
-  /(https?:\/\/[^\s)]+|\[[^\]]+\]\([^)]+\)|10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+)/i;
-
-function extractEmpiricalNumbersFromProse(statement: string): number[] {
-  // Remove known non-measurement alphanumeric identifiers before scanning numbers
-  const scrubbed = statement
-    .replace(/\b(O15a|O15b|218m|BASS-II|Saffire-I|SAME-R|PSI-\d+|NTRS[\s-]*\d+|NASA\/TM-\d+|Figure\s+6\.4|Table\s+A\.5|1\/6\s*g|0\s*g|1\s*g)\b/gi, " ")
-    .replace(/\b20(15|20|21|22|24|25|26)\b/g, " ");
-
-  const matches = scrubbed.match(/\b\d+(?:\.\d+)?\b/g);
-  if (!matches) return [];
-  return matches
-    .map((m) => Number(m))
-    .filter((n) => Number.isFinite(n));
+function renderEvidenceClaim(evidence: BoundEvidenceCitation): CitedClaim {
+  const { evidence_id, source_id, reviewed_fact, normalized_value, normalized_unit } =
+    evidence;
+  return {
+    statement: escapeHtml(reviewed_fact),
+    evidence_ids: [evidence_id],
+    source_ids: [source_id],
+    ...(normalized_value !== null && normalized_unit
+      ? {
+          numeric_facts: [{
+            label: evidence.field_name.replace(/_/g, " "),
+            value: normalized_value,
+            unit: normalized_unit,
+            basis: evidence.measurement_basis,
+            evidence_id,
+          }],
+        }
+      : {}),
+  };
 }
 
 export function validateModelExplanation(
@@ -263,321 +239,150 @@ export function validateModelExplanation(
 ):
   | { valid: true; data: ExplanationResponse; bound_citations: BoundEvidenceCitation[] }
   | { valid: false; reason: string } {
-  const parsed = ExplanationResponseSchema.safeParse(rawCandidate);
+  const parsed = ModelExplanationSchema.safeParse(rawCandidate);
   if (!parsed.success) {
-    return {
-      valid: false,
-      reason: `Schema validation failed: ${parsed.error.issues
-        .map((i) => `${i.path.join(".")}: ${i.message}`)
-        .join("; ")}`,
-    };
+    return { valid: false, reason: "Invalid model evidence selection." };
   }
 
-  const data = parsed.data;
-  const allClaims = [
-    ...data.observed_findings,
-    ...data.applicability_limits,
-    ...data.missing_evidence,
-  ];
-
-  const referencedEvidenceIds = new Set<string>();
-
-  for (const claim of allClaims) {
-    // 1. Reject raw URLs, markdown links, or inline DOIs in prose (links must be rendered from server-owned records)
-    if (URL_OR_MARKDOWN_LINK_REGEX.test(claim.statement)) {
+  const { observed_findings, applicability_limits, missing_evidence } = parsed.data;
+  const citedIds = new Set([...observed_findings, ...applicability_limits, ...missing_evidence]);
+  const boundCitations: BoundEvidenceCitation[] = [];
+  for (const id of citedIds) {
+    if (!allowlist.allowedEvidenceIds.has(id)) {
       return {
         valid: false,
-        reason: `Rejected unallowed inline link, URL, or raw DOI in claim prose: "${claim.statement.slice(0, 80)}"`,
+        reason: `Rejected unknown or irrelevant evidence_id '${id}' outside request allowlist.`,
       };
     }
-
-    // 2. Verify every evidence_id is in the request-scoped allowlist
-    for (const evId of claim.evidence_ids) {
-      if (!allowlist.allowedEvidenceIds.has(evId)) {
-        return {
-          valid: false,
-          reason: `Rejected unknown or irrelevant evidence_id '${evId}' outside request allowlist.`,
-        };
-      }
-      referencedEvidenceIds.add(evId);
-    }
-
-    // 3. Verify every source_id is in the request-scoped allowlist and matches the cited evidence_ids
-    for (const srcId of claim.source_ids) {
-      if (!allowlist.allowedSourceIds.has(srcId)) {
-        return {
-          valid: false,
-          reason: `Rejected unknown or irrelevant source_id '${srcId}' outside request allowlist.`,
-        };
-      }
-    }
-
-    // 4. Validate numeric_facts: value AND unit must match the bound evidence record!
-    if (claim.numeric_facts) {
-      for (const nf of claim.numeric_facts) {
-        if (!allowlist.allowedEvidenceIds.has(nf.evidence_id)) {
-          return {
-            valid: false,
-            reason: `Numeric fact references unallowed evidence_id '${nf.evidence_id}'.`,
-          };
-        }
-        const bound = allowlist.evidenceMap[nf.evidence_id];
-        if (!bound) {
-          return {
-            valid: false,
-            reason: `Missing bound evidence record for '${nf.evidence_id}'.`,
-          };
-        }
-
-        const matchesNormalized =
-          bound.normalized_value !== null &&
-          Math.abs(bound.normalized_value - nf.value) <= 0.1;
-        const origNum =
-          bound.original_value !== null ? Number(bound.original_value) : NaN;
-        const matchesOriginal =
-          Number.isFinite(origNum) && Math.abs(origNum - nf.value) <= 0.1;
-
-        if (!matchesNormalized && !matchesOriginal) {
-          return {
-            valid: false,
-            reason: `Numeric fact value '${nf.value}' does not match bound evidence '${nf.evidence_id}' (expected ${bound.normalized_value} ${bound.normalized_unit} or ${bound.original_value} ${bound.original_unit}).`,
-          };
-        }
-
-        // Enforce strict unit compatibility (reject right value with wrong unit!)
-        const validNormUnit =
-          matchesNormalized &&
-          bound.normalized_unit !== null &&
-          unitsAreCompatible(nf.unit, bound.normalized_unit);
-        const validOrigUnit =
-          matchesOriginal &&
-          bound.original_unit !== null &&
-          unitsAreCompatible(nf.unit, bound.original_unit);
-
-        if (!validNormUnit && !validOrigUnit) {
-          return {
-            valid: false,
-            reason: `Unit swap rejected on '${nf.evidence_id}': got '${nf.value} ${nf.unit}', expected unit '${bound.normalized_unit}' or '${bound.original_unit}'.`,
-          };
-        }
-
-        // Enforce measurement basis match
-        if (
-          nf.basis !== bound.measurement_basis &&
-          !(bound.measurement_basis === "final" && nf.basis === "endpoint") &&
-          !(bound.measurement_basis === "endpoint" && nf.basis === "final")
-        ) {
-          return {
-            valid: false,
-            reason: `Measurement basis mismatch on '${nf.evidence_id}': got '${nf.basis}', expected '${bound.measurement_basis}'.`,
-          };
-        }
-      }
-    }
-
-    // 5. Validate numbers appearing in prose statement against allowlist numbers
-    const proseNumbers = extractEmpiricalNumbersFromProse(claim.statement);
-    for (const pNum of proseNumbers) {
-      const backed = Array.from(allowlist.allowedNumbers).some(
-        (allowed) => Math.abs(allowed - pNum) <= 0.1
-      );
-      if (!backed) {
-        return {
-          valid: false,
-          reason: `Unsupported number '${pNum}' in claim prose is not backed by the request's verified evidence.`,
-        };
-      }
-    }
+    boundCitations.push(allowlist.evidenceMap[id]);
   }
 
-  const boundCitations = Array.from(referencedEvidenceIds)
-    .map((id) => allowlist.evidenceMap[id])
-    .filter((c): c is BoundEvidenceCitation => Boolean(c));
-
-  const sanitized: ExplanationResponse = {
-    observed_findings: data.observed_findings.map((c) => ({
-      ...c,
-      statement: escapeHtml(c.statement),
-    })),
-    applicability_limits: data.applicability_limits.map((c) => ({
-      ...c,
-      statement: escapeHtml(c.statement),
-    })),
-    missing_evidence: data.missing_evidence.map((c) => ({
-      ...c,
-      statement: escapeHtml(c.statement),
-    })),
-    evidence_gap_warning: data.evidence_gap_warning
-      ? escapeHtml(data.evidence_gap_warning)
-      : null,
-  };
+  const renderSection = (ids: string[]) =>
+    Array.from(new Set(ids), (id) => renderEvidenceClaim(allowlist.evidenceMap[id]));
 
   return {
     valid: true,
-    data: sanitized,
+    data: {
+      observed_findings: renderSection(observed_findings),
+      applicability_limits: renderSection(applicability_limits),
+      missing_evidence: renderSection(missing_evidence),
+      evidence_gap_warning: null,
+    },
     bound_citations: boundCitations,
   };
 }
 
-export function buildReviewedFallbackExplanation(
-  scenario: ResolvedScenario,
-  ranked: RankedInvestigationResult[],
-  applicability: ScenarioApplicabilityResult,
-  isSafeThresholdRequest: boolean
-): ExplanationResponse {
-  const topStudy = ranked[0];
-  const topId = topStudy?.investigation_id ?? "BASS-II";
+export function buildReviewedFallbackExplanation(args: {
+  scenario: ResolvedScenario;
+  ranked: RankedInvestigationResult[];
+  applicability: ScenarioApplicabilityResult;
+  selectedRuns: readonly Run[];
+  comparison: RunComparisonResult;
+  catalog: Catalog;
+  isSafeThresholdRequest: boolean;
+}): ExplanationResponse {
+  const { scenario, ranked, applicability, selectedRuns, comparison, catalog } = args;
+  const browsing = scenario.scenario_state === "browse_or_insufficient_input";
+  const selectedStudyIds = new Set(selectedRuns.map((run) => run.investigation_id));
+  const topStudy = browsing ? undefined : ranked[0];
+  const studies = ranked.filter((study) =>
+    study === topStudy ||
+    selectedStudyIds.has(study.investigation_id) ||
+    (topStudy?.investigation_id === "BASS-II" && study.pinned_for_rover_panel)
+  );
 
-  const observedFindings: ExplanationResponse["observed_findings"] = [];
+  const findings = new Set(selectedRuns.flatMap((run) => run.evidence_ids));
+  if (topStudy) {
+    for (const id of topStudy.research_lead.evidence_ids) findings.add(id);
+    if (topStudy.investigation_id === "BASS-II") findings.add("EV_BASSII_FIG64_FINAL");
+  }
+  const observed_findings = Array.from(findings)
+    .map((id) => resolveEvidenceById(id, catalog))
+    .filter((evidence): evidence is BoundEvidenceCitation => evidence !== null)
+    .slice(0, 6)
+    .map(renderEvidenceClaim);
 
-  if (topId === "Saffire-I") {
-    observedFindings.push({
-      statement: escapeHtml(
-        topStudy.research_lead.finding
-      ),
-      evidence_ids: ["EV_SAFFIRE_I_SUMMARY"],
-      source_ids: ["SRC_SAFFIRE_I_RESULTS"],
-      numeric_facts: [
-        {
-          label: "Saffire-I Average Flame Spread",
-          value: 1.8,
-          unit: "mm/s",
-          basis: "measured",
-          evidence_id: "EV_SAFFIRE_I_SUMMARY",
-        },
-      ],
-    });
-  } else if (topId === "SAME-R") {
-    observedFindings.push({
-      statement: escapeHtml(
-        topStudy.research_lead.finding
-      ),
-      evidence_ids: ["EV_SAMER_SUMMARY"],
-      source_ids: ["SRC_SAMER_MEYER2018"],
-      numeric_facts: [
-        {
-          label: "Aged Kapton Count-Mean Diameter (Microscopy)",
-          value: 0.235,
-          unit: "µm",
-          basis: "measured",
-          evidence_id: "EV_SAMER_SUMMARY",
-        },
-      ],
-    });
-  } else if (topId === "FLEX") {
-    observedFindings.push({
-      statement: escapeHtml(
-        `${topStudy.research_lead.finding} ${topStudy.research_lead.limitation}`
-      ),
-      evidence_ids: ["EV_FLEX_SUMMARY"],
-      source_ids: ["SRC_FLEX_TP"],
-      numeric_facts: [
-        {
-          label: "FLEX Comparison Initial Oxygen",
-          value: 21.0,
-          unit: "%",
-          basis: "initial",
-          evidence_id: "EV_FLEX_SUMMARY",
-        },
-      ],
-    });
-  } else {
-    observedFindings.push({
-      statement: escapeHtml(
-        "BASS-II Figure 6.4 records quenching after five progressively lower airflow plateaus as oxygen fell from 14.8% to 13.6%. Table A.5 reports calibrated initial oxygen of 17.1% for O15a and 16.7% for O15b. The tests used the same PMMA rod and report extinction potentiometer settings."
-      ),
-      evidence_ids: [
-        "EV_BASSII_FIG64_SEQ",
-        "EV_BASSII_FIG64_FINAL",
-        "EV_BASSII_O15A",
-        "EV_BASSII_O15B",
-        "EV_PMMA_COHORT_24",
-      ],
-      source_ids: [
-        "SRC_BASSII_TM2021",
-        "SRC_BASSII_PSI25",
-        "SRC_PMMA_CONCURRENT_PAPER",
-      ],
-      numeric_facts: [
-        {
-          label: "Initial Oxygen (Figure 6.4)",
-          value: 14.8,
-          unit: "%",
-          basis: "initial",
-          evidence_id: "EV_BASSII_FIG64_SEQ",
-        },
-        {
-          label: "Final Oxygen (Figure 6.4)",
-          value: 13.6,
-          unit: "%",
-          basis: "final",
-          evidence_id: "EV_BASSII_FIG64_FINAL",
-        },
-      ],
-    });
+  const applicability_limits = studies.map((study) => {
+    const { evidence_ids } = study.research_lead;
+    const investigation = catalog.investigations.find((item) => item.id === study.investigation_id);
+    const limitation = study.investigation_id === "BASS-II" && scenario.gravity_regime !== "lunar_1_6g"
+      ? investigation?.limitations ?? study.research_lead.limitation
+      : study.research_lead.limitation;
+    const citations = evidence_ids
+      .map((id) => resolveEvidenceById(id, catalog))
+      .filter((evidence): evidence is BoundEvidenceCitation => evidence !== null);
+    return {
+      statement: escapeHtml(limitation),
+      evidence_ids: citations.map((evidence) => evidence.evidence_id),
+      source_ids: Array.from(new Set(citations.map((evidence) => evidence.source_id))),
+    };
+  });
+  if (comparison.status === "compared") {
+    for (const warning of comparison.confounders) {
+      applicability_limits.push({
+        statement: escapeHtml(warning.message),
+        evidence_ids: [],
+        source_ids: [],
+      });
+    }
   }
 
-  const applicabilityLimits: ExplanationResponse["applicability_limits"] = [
-    {
-      statement: escapeHtml(
-        "BASS-II tests O15a and O15b shared sample 218m and changed airflow during the burns. Endpoint airspeed and run pressure are unreported. In LUCI, a 4 mm acrylic rod and cotton-fiberglass fabric burned together in normal-pressure air at simulated lunar gravity. Oxygen observations apply to the shared chamber."
-      ),
-      evidence_ids: ["EV_BASSII_O15A", "EV_BASSII_O15B", "EV_LUCI_SUMMARY"],
-      source_ids: ["SRC_BASSII_TM2021", "SRC_LUCI_NTRS2025"],
-      numeric_facts: [
-        {
-          label: "LUCI Acrylic Rod Diameter",
-          value: 4.0,
-          unit: "mm",
-          basis: "measured",
-          evidence_id: "EV_LUCI_SUMMARY",
-        },
-      ],
-    },
-  ];
-
-  const missingEvidence: ExplanationResponse["missing_evidence"] = [
-    {
-      statement: escapeHtml(
-        `${applicability.combination_message} Within this collection, no verified test simultaneously covers PMMA at ~1/6 g lunar partial gravity in the proposed 34.0% O2, 8.2 psia (56.5 kPa) exploration atmosphere. Predictive interpolation between microgravity and 1 g is deferred because buoyant convection at 0.167 g can extend flammability beyond microgravity limits.`
-      ),
-      evidence_ids: [
-        "EV_EXPLORATION_ATM_2024",
-        "EV_EXPLORATION_ATM_O2",
-        "EV_PARTIAL_G_REVIEW",
-      ],
-      source_ids: ["SRC_EXPLORATION_ATM_2024", "SRC_PARTIAL_G_REVIEW"],
-      numeric_facts: [
-        {
-          label: "Exploration Atmosphere Oxygen Assumption",
-          value: 34.0,
-          unit: "%",
-          basis: "assumed",
-          evidence_id: "EV_EXPLORATION_ATM_O2",
-        },
-        {
-          label: "Exploration Atmosphere Pressure Assumption",
-          value: 56.5,
-          unit: "kPa",
-          basis: "assumed",
-          evidence_id: "EV_EXPLORATION_ATM_2024",
-        },
-      ],
-    },
-  ];
-
-  const gapWarning = isSafeThresholdRequest
-    ? escapeHtml(
-        "EVIDENCE GAP WARNING: This collection cannot certify a 'safe cabin oxygen setting' or guaranteed non-flammable threshold. The curated NASA studies report experimental observations under specific test geometries and atmospheres; partial-gravity flammability at ~1/6 g and 34% O2 / 56.5 kPa can extend beyond microgravity limits and requires dedicated experimental verification."
-      )
-    : scenario.gravity_regime === "lunar_1_6g"
-    ? escapeHtml(applicability.evidence_gap_summary)
-    : null;
+  const gaps = new Set<string>();
+  if (!browsing && [
+    scenario.material, scenario.geometry_shape, scenario.requested_outcome,
+    scenario.gravity_regime, scenario.oxygen_pct, scenario.pressure_kpa, scenario.airflow_cm_s,
+  ].some((value) => value !== null && value !== undefined && value !== "")) {
+    gaps.add(applicability.combination_message);
+  }
+  for (const study of studies) {
+    for (const reason of study.missing_or_mismatched_conditions) {
+      gaps.add(`${study.investigation_id}: ${reason}`);
+    }
+    if (study.reviewed_run_count === 0) {
+      gaps.add(`The catalog has study-level evidence for ${study.investigation_id} and no verified run records for a run-level match.`);
+    }
+  }
+  if (scenario.material?.toLowerCase() === "heptane" &&
+      studies.some((study) => study.investigation_id === "FLEX")) {
+    gaps.add("The reviewed FLEX comparison covers methanol droplets. It does not provide a heptane comparison.");
+  }
+  if (comparison.status === "no_comparable_pair" &&
+      (scenario.selected_run_ids?.length ?? 0) >= 2 && comparison.reason) {
+    gaps.add(comparison.reason);
+  }
 
   return {
-    observed_findings: observedFindings,
-    applicability_limits: applicabilityLimits,
-    missing_evidence: missingEvidence,
-    evidence_gap_warning: gapWarning,
+    observed_findings,
+    applicability_limits: applicability_limits.slice(0, 6),
+    missing_evidence: Array.from(gaps).slice(0, 6).map((statement) => ({
+      statement: escapeHtml(statement),
+      evidence_ids: [],
+      source_ids: [],
+    })),
+    evidence_gap_warning: buildReviewedEvidenceGapWarning(
+      scenario, applicability, args.isSafeThresholdRequest
+    ),
   };
+}
+
+export function buildReviewedEvidenceGapWarning(
+  scenario: ResolvedScenario,
+  applicability: ScenarioApplicabilityResult,
+  isSafeThresholdRequest: boolean
+): string | null {
+  if (isSafeThresholdRequest) {
+    return escapeHtml(
+      "EVIDENCE GAP WARNING: This collection cannot certify a safe cabin setting or guaranteed non-flammable threshold. The curated NASA studies report observations under specific test geometries and atmospheres. A safety threshold for the proposed conditions requires dedicated verification."
+    );
+  }
+  if (scenario.gravity_regime !== "lunar_1_6g" || applicability.combination_tested) {
+    return null;
+  }
+  const matchesRoverConditions =
+    scenario.material?.toLowerCase() === "pmma" &&
+    scenario.oxygen_pct === 34 &&
+    scenario.pressure_kpa === 56.5;
+  return escapeHtml(matchesRoverConditions
+    ? applicability.evidence_gap_summary
+    : applicability.combination_message);
 }
