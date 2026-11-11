@@ -28,11 +28,11 @@ Structured values were manually compared against the original NASA report, Table
 
 
 
-\## 3. Validated Fields
+\## 3. Fields Selected for Validation
 
 
 
-The following fields were checked for both O15a and O15b:
+The following fields were selected for manual verification against Table A.5. Validation results are documented in Section 4.
 
 
 
@@ -160,7 +160,65 @@ Therefore, O15b must not be treated as an independent sample.
 
 \- Method: Manual comparison against the original NASA report.
 
-\- Scope: The listed fields were checked against Table A.5.
+\- Scope: Selected fields were checked against Table A.5.
 
 \- Remaining work: Additional field-level checks and validation of the complete structured dataset are still required.
+
+
+
+\## 8. Structural Quality Checks
+
+
+
+The structured CSV file was inspected in Excel.
+
+
+
+The following checks were completed:
+
+
+
+\- No extra blank data rows were found.
+
+\- As-run test numbers are unique:
+
+&#x20; - O15a: 100
+
+&#x20; - O15b: 101
+
+\- Test Point IDs are distinct:
+
+&#x20; - O15a
+
+&#x20; - O15b
+
+\- Selected numeric fields were checked and displayed as numeric values in Excel:
+
+&#x20; - Sample Diameter
+
+&#x20; - Total Frames
+
+&#x20; - Flow-to-Extinction Setting
+
+&#x20; - Initial O2
+
+&#x20; - Final O2
+
+&#x20; - Final CO
+
+\- No empty cells were found in the O15a row.
+
+\- No empty cells were found in the O15b row.
+
+
+
+\### Quality Check Status
+
+
+
+\- Structural checks: Passed for the inspected records.
+
+\- Scientific validation: Partially verified.
+
+\- Full dataset validation: Not completed.
 
