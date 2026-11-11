@@ -25,7 +25,7 @@
     "data_depth": "verified_runs",
     "research_lead": {
       "question": "How does step-down or changing ventilation airflow alter solid acrylic (PMMA) flame survival and extinction in spacecraft microgravity?",
-      "finding": "In concurrent-flow PMMA rod burns, high forced airflow can induce blowoff whereas stepping airflow down as oxygen depletes (from 14.8% initially to 13.6% finally in Figure 6.4, and across candidate tests O15a/O15b on sample 218m) leads to radiative quenching.",
+      "finding": "In Figure 6.4 the PMMA flame quenched after five progressively lower airflow plateaus as oxygen fell from 14.8% to 13.6%. O15a and O15b separately record extinction at potentiometer settings on the same rod, with calibrated oxygen recorded in Table A.5.",
       "conditions": "ISS microgravity (MSG flow duct), clear 9.525 mm diameter PMMA rod (sample 218m) and 24-run cohort, 13.6%–21.0% O2, forced flow 0.5–45.0 cm/s.",
       "limitation": "Does not test partial lunar gravity (~1/6 g) or the 34% O2 / 56.5 kPa exploration cabin atmosphere.",
       "evidence_ids": ["EV_BASSII_FIG64_SEQ", "EV_BASSII_O15A", "EV_BASSII_O15B", "EV_PMMA_COHORT_24"]
@@ -50,20 +50,20 @@
     "measured_outcomes": ["large_scale_flame_spread", "flame_spread_rate", "enclosure_pressure_rise", "sustained_burning"],
     "conditions_coverage": {
       "gravity_regimes": ["microgravity"],
-      "oxygen_range_pct": [20.9, 21.0],
-      "pressure_range_kpa": [100.5, 101.5],
+      "oxygen_range_pct": [21.5, 21.7],
+      "pressure_range_kpa": null,
       "airflow_range_cm_s": [20.0, 20.0]
     },
-    "limitations": "Tested thin cotton-fiberglass fabric in normal-air equivalent (~21% O2, ~101 kPa) in microgravity; did not test thick PMMA rods or 34% O2 / 56.5 kPa lunar rover conditions.",
+    "limitations": "The reviewed result covers a SIBAL sheet in orbital microgravity. Run-specific numeric pressure is unreported in the cited presentation.",
     "data_depth": "study_summary",
     "research_lead": {
       "question": "How does a meter-scale solid fabric fire grow and interact with spacecraft enclosure volume in microgravity compared to small glovebox samples?",
-      "finding": "Saffire-I demonstrated steady concurrent flame spread across a 0.4 m x 0.94 m SIBAL fabric sample at 20 cm/s airflow in Cygnus (DOI 10.60555/0t15-1z43), quantifying large-scale flame spread and enclosure pressure rise.",
-      "conditions": "Uncrewed Cygnus microgravity, 0.4 m x 0.94 m SIBAL cotton-fiberglass sheet, ~21% O2, ~101.3 kPa, 20 cm/s airflow.",
-      "limitation": "Single atmosphere (~21% O2, 101 kPa) in orbital microgravity; not directly transferable to 1/6 g partial gravity.",
+      "finding": "Sample 1-1 was a 40.6 x 94 cm SIBAL sheet aboard uncrewed Cygnus. It burned for 420 s at 20 cm/s concurrent airflow, spread at 1.8 mm/s on average and extinguished after scheduled airflow shutoff.",
+      "conditions": "Orbital microgravity in the Saffire flow duct, 20 cm/s concurrent airflow, 21.7% to 21.5% oxygen. Run-specific numeric pressure is unreported in the cited presentation.",
+      "limitation": "The flame went out at the scheduled airflow shutoff. The run does not establish a minimum airflow threshold.",
       "evidence_ids": ["EV_SAFFIRE_I_SUMMARY"]
     },
-    "source_ids": ["SRC_SAFFIRE_I_PSI98"]
+    "source_ids": ["SRC_SAFFIRE_I_PSI98", "SRC_SAFFIRE_I_RESULTS"]
   },
   {
     "id": "SAME-R",
@@ -72,14 +72,14 @@
     "task_tags": ["smoke_detection"],
     "scale_class": "small_duct_sample",
     "fuel_class": "solid",
-    "material": ["PMMA", "cotton_fiberglass", "kapton", "silicone", "teflon"],
+    "material": ["cotton_fiberglass", "kapton", "silicone", "teflon"],
     "geometry_shape": ["cylinder", "wire_insulation"],
     "sample_dimensions_summary": "Small cylindrical polymer and wire-insulation pyrolysis coupons in MSG smoke aging duct.",
     "is_proxy_experiment": false,
     "published_run_count": null,
     "reviewed_run_count": 0,
     "shared_hardware_context": "Conducted inside the ISS Microgravity Science Glovebox using thermal pyrolysis of spacecraft materials.",
-    "methods": "Generated smoke aerosols from overheated spacecraft materials (including PMMA, cellulose/cotton, silicone, Kapton, and Teflon) and measured particle diameter distributions and aging for ionization and photoelectric detector calibration.",
+    "methods": "Heated materials including Kapton, cotton, silicone and Teflon below ignition, aged the smoke, and characterized its particles with aerosol instruments and microscopy.",
     "measured_outcomes": ["smoke_particle_size", "moment_average_diameter", "detector_response"],
     "conditions_coverage": {
       "gravity_regimes": ["microgravity"],
@@ -91,12 +91,12 @@
     "data_depth": "study_summary",
     "research_lead": {
       "question": "How do microgravity smoke particle size distributions from overheated spacecraft polymers affect early fire detector selection?",
-      "finding": "Microgravity lack of buoyancy increases residence time inside the hot zone, producing larger aggregated smoke particles than 1 g tests and shifting optical vs. ionization detector response sensitivities.",
-      "conditions": "ISS microgravity (MSG), thermal pyrolysis of PMMA, cotton, Kapton, silicone, Teflon at ~101 kPa.",
-      "limitation": "Measures smoke aerosol properties from pyrolysis rather than flaming extinction limits.",
+      "finding": "Kapton run 62 count-mean particle diameter increased from 0.180 to 0.235 micrometers by microscopy and from 0.148 to 0.243 micrometers by the aerosol moment method, at 38.8 and 807.6 s of net aging.",
+      "conditions": "ISS microgravity, Kapton run 62 at 574.3 °C and 8.1 cm/s inlet velocity, with two net aging durations.",
+      "limitation": "The two observations are from the same run. Particle diameters do not establish alarm thresholds or response times.",
       "evidence_ids": ["EV_SAMER_SUMMARY"]
     },
-    "source_ids": ["SRC_SAMER_PSI101"]
+    "source_ids": ["SRC_SAMER_PSI101", "SRC_SAMER_MEYER2018"]
   },
   {
     "id": "FLEX",
@@ -124,12 +124,12 @@
     "data_depth": "published_reference",
     "research_lead": {
       "question": "How do inert gas diluents (CO2, N2, He) extinguish spherical microgravity flames, and when do post-extinction cool flames persist?",
-      "finding": "FLEX mapped droplet burning rates and radiative/diffusive extinction limits across oxygen and diluent concentrations, revealing second-stage low-temperature cool-flame burning in alkane droplets after visible flame quenching.",
-      "conditions": "ISS CIR/MDCA microgravity, isolated heptane and methanol droplets, 15%–25% O2, 70–300 kPa.",
-      "limitation": "Proxy liquid droplet geometry; does not measure solid polymer surface regression or melt-layer dripping.",
+      "finding": "Free-floating methanol runs 203 and 171 at 21% initial oxygen and near 1 atm used 0% and 15% CO2. Their reported extinction diameters were 1.42 and 1.59 mm. Run 171 started with a larger droplet and its extinction diameter came from a fit across missing observations. Both ended in diffusive extinction.",
+      "conditions": "ISS CIR/MDCA, free-floating methanol droplets, near 1 atm and 21% initial oxygen.",
+      "limitation": "The two droplet runs differ in initial diameter and measurement method. They support a descriptive comparison of the reported outcomes without isolating a CO2 effect.",
       "evidence_ids": ["EV_FLEX_SUMMARY"]
     },
-    "source_ids": ["SRC_FLEX_PSI69"]
+    "source_ids": ["SRC_FLEX_PSI69", "SRC_FLEX_TP"]
   },
   {
     "id": "LUCI",
@@ -145,21 +145,21 @@
     "published_run_count": 1,
     "reviewed_run_count": 0,
     "shared_hardware_context": "Flown aboard a rotating Blue Origin New Shepard sounding rocket simulating ~1/6 g; both the 4 mm acrylic rod and cotton-fiberglass fabric burned simultaneously inside the same chamber, so oxygen readings apply at shared-chamber scope.",
-    "methods": "Simulated lunar gravity (~1/6 Earth g) aboard a rotating New Shepard sounding rocket in normal-pressure air (21% O2, ~101.3 kPa), burning a 4 mm diameter acrylic rod and cotton-fiberglass fabric at the same time.",
+    "methods": "Simulated lunar gravity aboard rotating New Shepard with a 4 mm acrylic rod and cotton-fiberglass fabric burning together in normal-pressure air.",
     "measured_outcomes": ["sustained_burning", "flame_spread_rate"],
     "conditions_coverage": {
       "gravity_regimes": ["lunar_1_6g"],
-      "oxygen_range_pct": [21.0, 21.0],
-      "pressure_range_kpa": [101.3, 101.3],
+      "oxygen_range_pct": null,
+      "pressure_range_kpa": null,
       "airflow_range_cm_s": null
     },
-    "limitations": "Conducted in normal-pressure air (21% O2, 101.3 kPa) rather than the 34% O2 / 56.5 kPa exploration atmosphere, and burned both the 4 mm acrylic rod and cotton-fiberglass fabric simultaneously in the same shared chamber. Represented as a published_reference card pending run-level telemetry release.",
+    "limitations": "Both samples burned in the same chamber. Oxygen readings are chamber-level and numeric pressure is unreported in the cited presentation.",
     "data_depth": "published_reference",
     "research_lead": {
       "question": "How does simulated lunar partial gravity (~1/6 g) aboard a rotating sounding rocket affect solid acrylic and fabric combustion compared to orbital microgravity?",
-      "finding": "LUCI (NTRS 20250010653) demonstrated simultaneous burning of a 4 mm acrylic rod and cotton-fiberglass fabric under ~1/6 g simulated by a rotating New Shepard sounding rocket in normal-pressure air, providing a partial-gravity anchor point distinct from 0 g ISS tests.",
-      "conditions": "Rotating New Shepard sounding rocket (~1/6 g), 21.0% O2, 101.3 kPa normal-pressure air, shared chamber with 4 mm PMMA rod + cotton-fiberglass fabric.",
-      "limitation": "Does not cover the 34% O2, 8.2 psia (56.5 kPa) lunar rover exploration atmosphere; oxygen readings are at shared-chamber level.",
+      "finding": "A 4 mm acrylic rod and SIBAL fabric burned together in normal-pressure air aboard a rotating New Shepard rocket at simulated lunar gravity. Flame-tip spread rates were 1.5 mm/s for acrylic and 1.1 mm/s for fabric. Oxygen readings apply at chamber level. Numeric chamber pressure is unreported in the presentation.",
+      "conditions": "Rotating New Shepard rocket at simulated lunar gravity, with a shared chamber in normal-pressure air.",
+      "limitation": "Numeric pressure is unreported in the presentation. Oxygen observations are chamber-level, and the test does not cover the proposed lunar rover atmosphere.",
       "evidence_ids": ["EV_LUCI_SUMMARY"]
     },
     "source_ids": ["SRC_LUCI_NTRS2025"]

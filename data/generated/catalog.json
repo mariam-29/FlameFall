@@ -1,15 +1,15 @@
 {
-  "catalog_version": "2026.11.14-66a836f1",
-  "sha256_hash": "66a836f1c212ef8648452c1f47d8d7b1b1e78ce5e852ffe7f7985ebc78603e74",
+  "catalog_version": "2026.11.14-92dc5aa6",
+  "sha256_hash": "92dc5aa6e519d1b7b66151239494930420f54c7d1805be324b09b820cd59593a",
   "generated_at": "2026-11-14T09:00:00Z",
   "counts": {
-    "sources": 9,
+    "sources": 12,
     "investigations": 5,
     "runs": 2,
     "verified_runs": 2,
     "provisional_runs": 0,
     "published_pmma_cohort_runs": 24,
-    "phases": 4,
+    "phases": 5,
     "evidence": 12,
     "exclusions": 3
   },
@@ -38,7 +38,7 @@
       "accessed_date": "2026-11-09",
       "reuse_terms": "Public Domain NASA Technical Memorandum; cite NASA/TM-20210011385",
       "original_filenames": [
-        "20210011385.pdf"
+        "TM-20210011385.pdf"
       ]
     },
     {
@@ -77,7 +77,7 @@
       "accessed_date": "2026-11-09",
       "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/2np7-jv14",
       "original_filenames": [
-        "SAME-R_Final_Report_Particle_Sizes.pdf"
+        "PSI-101_Experimental table_SAME-R.csv"
       ]
     },
     {
@@ -90,7 +90,7 @@
       "accessed_date": "2026-11-09",
       "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/mbq8-0451",
       "original_filenames": [
-        "FLEX_Droplet_Run_Table.csv"
+        "PSI-69_Experimental_Table_Tests_1-5.csv"
       ]
     },
     {
@@ -103,7 +103,7 @@
       "accessed_date": "2026-11-09",
       "reuse_terms": "Public Domain NASA Presentation; cite NTRS 20250010653",
       "original_filenames": [
-        "20250010653.pdf"
+        "ASGSR 2025-LUCI-Ferkul-Presentation-v2-20250010653.pdf"
       ]
     },
     {
@@ -130,6 +130,43 @@
       "reuse_terms": "Public Domain NASA Review; cite NTRS 20220015800",
       "original_filenames": [
         "Partial_Gravity_Fire_Safety_Review.pdf"
+      ]
+    },
+    {
+      "id": "SRC_SAFFIRE_I_RESULTS",
+      "publisher": "NASA Technical Reports Server",
+      "title": "Results of Large-Scale Spacecraft Flammability Tests",
+      "url": "https://ntrs.nasa.gov/citations/20170008805",
+      "doi_or_ntrs_id": "NTRS-20170008805",
+      "version": "Published",
+      "accessed_date": "2026-11-11",
+      "reuse_terms": "Cite the published source.",
+      "original_filenames": [
+        "NTRS-20170008805.pdf"
+      ]
+    },
+    {
+      "id": "SRC_SAMER_MEYER2018",
+      "publisher": "Fire Safety Journal",
+      "title": "Evaluation of Spacecraft Smoke Detector Performance in the Low-Gravity Environment",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7918997/",
+      "doi_or_ntrs_id": "10.1016/j.firesaf.2018.04.004",
+      "version": "Published",
+      "accessed_date": "2026-11-11",
+      "reuse_terms": "Cite the published source.",
+      "original_filenames": []
+    },
+    {
+      "id": "SRC_FLEX_TP",
+      "publisher": "NASA",
+      "title": "Detailed Results From the Flame Extinguishment Experiment (FLEX)",
+      "url": "https://ntrs.nasa.gov/citations/20150023456",
+      "doi_or_ntrs_id": "NASA/TP-2015-216046",
+      "version": "Published",
+      "accessed_date": "2026-11-11",
+      "reuse_terms": "Cite the published source.",
+      "original_filenames": [
+        "NASA-TP-2015-216046.pdf"
       ]
     }
   ],
@@ -188,7 +225,7 @@
       "data_depth": "verified_runs",
       "research_lead": {
         "question": "How does step-down or changing ventilation airflow alter solid acrylic (PMMA) flame survival and extinction in spacecraft microgravity?",
-        "finding": "In concurrent-flow PMMA rod burns, high forced airflow can induce blowoff whereas stepping airflow down as oxygen depletes (from 14.8% initially to 13.6% finally in Figure 6.4, and across candidate tests O15a/O15b on sample 218m) leads to radiative quenching.",
+        "finding": "In Figure 6.4 the PMMA flame quenched after five progressively lower airflow plateaus as oxygen fell from 14.8% to 13.6%. O15a and O15b separately record extinction at potentiometer settings on the same rod, with calibrated oxygen recorded in Table A.5.",
         "conditions": "ISS microgravity (MSG flow duct), clear 9.525 mm diameter PMMA rod (sample 218m) and 24-run cohort, 13.6%\u201321.0% O2, forced flow 0.5\u201345.0 cm/s.",
         "limitation": "Does not test partial lunar gravity (~1/6 g) or the 34% O2 / 56.5 kPa exploration cabin atmosphere.",
         "evidence_ids": [
@@ -240,31 +277,29 @@
           "microgravity"
         ],
         "oxygen_range_pct": [
-          20.9,
-          21.0
+          21.5,
+          21.7
         ],
-        "pressure_range_kpa": [
-          100.5,
-          101.5
-        ],
+        "pressure_range_kpa": null,
         "airflow_range_cm_s": [
           20.0,
           20.0
         ]
       },
-      "limitations": "Tested thin cotton-fiberglass fabric in normal-air equivalent (~21% O2, ~101 kPa) in microgravity; did not test thick PMMA rods or 34% O2 / 56.5 kPa lunar rover conditions.",
+      "limitations": "The reviewed result covers a SIBAL sheet in orbital microgravity. Run-specific numeric pressure is unreported in the cited presentation.",
       "data_depth": "study_summary",
       "research_lead": {
         "question": "How does a meter-scale solid fabric fire grow and interact with spacecraft enclosure volume in microgravity compared to small glovebox samples?",
-        "finding": "Saffire-I demonstrated steady concurrent flame spread across a 0.4 m x 0.94 m SIBAL fabric sample at 20 cm/s airflow in Cygnus (DOI 10.60555/0t15-1z43), quantifying large-scale flame spread and enclosure pressure rise.",
-        "conditions": "Uncrewed Cygnus microgravity, 0.4 m x 0.94 m SIBAL cotton-fiberglass sheet, ~21% O2, ~101.3 kPa, 20 cm/s airflow.",
-        "limitation": "Single atmosphere (~21% O2, 101 kPa) in orbital microgravity; not directly transferable to 1/6 g partial gravity.",
+        "finding": "Sample 1-1 was a 40.6 x 94 cm SIBAL sheet aboard uncrewed Cygnus. It burned for 420 s at 20 cm/s concurrent airflow, spread at 1.8 mm/s on average and extinguished after scheduled airflow shutoff.",
+        "conditions": "Orbital microgravity in the Saffire flow duct, 20 cm/s concurrent airflow, 21.7% to 21.5% oxygen. Run-specific numeric pressure is unreported in the cited presentation.",
+        "limitation": "The flame went out at the scheduled airflow shutoff. The run does not establish a minimum airflow threshold.",
         "evidence_ids": [
           "EV_SAFFIRE_I_SUMMARY"
         ]
       },
       "source_ids": [
-        "SRC_SAFFIRE_I_PSI98"
+        "SRC_SAFFIRE_I_PSI98",
+        "SRC_SAFFIRE_I_RESULTS"
       ]
     },
     {
@@ -281,7 +316,6 @@
       "scale_class": "small_duct_sample",
       "fuel_class": "solid",
       "material": [
-        "PMMA",
         "cotton_fiberglass",
         "kapton",
         "silicone",
@@ -296,7 +330,7 @@
       "published_run_count": null,
       "reviewed_run_count": 0,
       "shared_hardware_context": "Conducted inside the ISS Microgravity Science Glovebox using thermal pyrolysis of spacecraft materials.",
-      "methods": "Generated smoke aerosols from overheated spacecraft materials (including PMMA, cellulose/cotton, silicone, Kapton, and Teflon) and measured particle diameter distributions and aging for ionization and photoelectric detector calibration.",
+      "methods": "Heated materials including Kapton, cotton, silicone and Teflon below ignition, aged the smoke, and characterized its particles with aerosol instruments and microscopy.",
       "measured_outcomes": [
         "smoke_particle_size",
         "moment_average_diameter",
@@ -323,15 +357,16 @@
       "data_depth": "study_summary",
       "research_lead": {
         "question": "How do microgravity smoke particle size distributions from overheated spacecraft polymers affect early fire detector selection?",
-        "finding": "Microgravity lack of buoyancy increases residence time inside the hot zone, producing larger aggregated smoke particles than 1 g tests and shifting optical vs. ionization detector response sensitivities.",
-        "conditions": "ISS microgravity (MSG), thermal pyrolysis of PMMA, cotton, Kapton, silicone, Teflon at ~101 kPa.",
-        "limitation": "Measures smoke aerosol properties from pyrolysis rather than flaming extinction limits.",
+        "finding": "Kapton run 62 count-mean particle diameter increased from 0.180 to 0.235 micrometers by microscopy and from 0.148 to 0.243 micrometers by the aerosol moment method, at 38.8 and 807.6 s of net aging.",
+        "conditions": "ISS microgravity, Kapton run 62 at 574.3 \u00b0C and 8.1 cm/s inlet velocity, with two net aging durations.",
+        "limitation": "The two observations are from the same run. Particle diameters do not establish alarm thresholds or response times.",
         "evidence_ids": [
           "EV_SAMER_SUMMARY"
         ]
       },
       "source_ids": [
-        "SRC_SAMER_PSI101"
+        "SRC_SAMER_PSI101",
+        "SRC_SAMER_MEYER2018"
       ]
     },
     {
@@ -388,15 +423,16 @@
       "data_depth": "published_reference",
       "research_lead": {
         "question": "How do inert gas diluents (CO2, N2, He) extinguish spherical microgravity flames, and when do post-extinction cool flames persist?",
-        "finding": "FLEX mapped droplet burning rates and radiative/diffusive extinction limits across oxygen and diluent concentrations, revealing second-stage low-temperature cool-flame burning in alkane droplets after visible flame quenching.",
-        "conditions": "ISS CIR/MDCA microgravity, isolated heptane and methanol droplets, 15%\u201325% O2, 70\u2013300 kPa.",
-        "limitation": "Proxy liquid droplet geometry; does not measure solid polymer surface regression or melt-layer dripping.",
+        "finding": "Free-floating methanol runs 203 and 171 at 21% initial oxygen and near 1 atm used 0% and 15% CO2. Their reported extinction diameters were 1.42 and 1.59 mm. Run 171 started with a larger droplet and its extinction diameter came from a fit across missing observations. Both ended in diffusive extinction.",
+        "conditions": "ISS CIR/MDCA, free-floating methanol droplets, near 1 atm and 21% initial oxygen.",
+        "limitation": "The two droplet runs differ in initial diameter and measurement method. They support a descriptive comparison of the reported outcomes without isolating a CO2 effect.",
         "evidence_ids": [
           "EV_FLEX_SUMMARY"
         ]
       },
       "source_ids": [
-        "SRC_FLEX_PSI69"
+        "SRC_FLEX_PSI69",
+        "SRC_FLEX_TP"
       ]
     },
     {
@@ -425,7 +461,7 @@
       "published_run_count": 1,
       "reviewed_run_count": 0,
       "shared_hardware_context": "Flown aboard a rotating Blue Origin New Shepard sounding rocket simulating ~1/6 g; both the 4 mm acrylic rod and cotton-fiberglass fabric burned simultaneously inside the same chamber, so oxygen readings apply at shared-chamber scope.",
-      "methods": "Simulated lunar gravity (~1/6 Earth g) aboard a rotating New Shepard sounding rocket in normal-pressure air (21% O2, ~101.3 kPa), burning a 4 mm diameter acrylic rod and cotton-fiberglass fabric at the same time.",
+      "methods": "Simulated lunar gravity aboard rotating New Shepard with a 4 mm acrylic rod and cotton-fiberglass fabric burning together in normal-pressure air.",
       "measured_outcomes": [
         "sustained_burning",
         "flame_spread_rate"
@@ -434,23 +470,17 @@
         "gravity_regimes": [
           "lunar_1_6g"
         ],
-        "oxygen_range_pct": [
-          21.0,
-          21.0
-        ],
-        "pressure_range_kpa": [
-          101.3,
-          101.3
-        ],
+        "oxygen_range_pct": null,
+        "pressure_range_kpa": null,
         "airflow_range_cm_s": null
       },
-      "limitations": "Conducted in normal-pressure air (21% O2, 101.3 kPa) rather than the 34% O2 / 56.5 kPa exploration atmosphere, and burned both the 4 mm acrylic rod and cotton-fiberglass fabric simultaneously in the same shared chamber. Represented as a published_reference card pending run-level telemetry release.",
+      "limitations": "Both samples burned in the same chamber. Oxygen readings are chamber-level and numeric pressure is unreported in the cited presentation.",
       "data_depth": "published_reference",
       "research_lead": {
         "question": "How does simulated lunar partial gravity (~1/6 g) aboard a rotating sounding rocket affect solid acrylic and fabric combustion compared to orbital microgravity?",
-        "finding": "LUCI (NTRS 20250010653) demonstrated simultaneous burning of a 4 mm acrylic rod and cotton-fiberglass fabric under ~1/6 g simulated by a rotating New Shepard sounding rocket in normal-pressure air, providing a partial-gravity anchor point distinct from 0 g ISS tests.",
-        "conditions": "Rotating New Shepard sounding rocket (~1/6 g), 21.0% O2, 101.3 kPa normal-pressure air, shared chamber with 4 mm PMMA rod + cotton-fiberglass fabric.",
-        "limitation": "Does not cover the 34% O2, 8.2 psia (56.5 kPa) lunar rover exploration atmosphere; oxygen readings are at shared-chamber level.",
+        "finding": "A 4 mm acrylic rod and SIBAL fabric burned together in normal-pressure air aboard a rotating New Shepard rocket at simulated lunar gravity. Flame-tip spread rates were 1.5 mm/s for acrylic and 1.1 mm/s for fabric. Oxygen readings apply at chamber level. Numeric chamber pressure is unreported in the presentation.",
+        "conditions": "Rotating New Shepard rocket at simulated lunar gravity, with a shared chamber in normal-pressure air.",
+        "limitation": "Numeric pressure is unreported in the presentation. Oxygen observations are chamber-level, and the test does not cover the proposed lunar rover atmosphere.",
         "evidence_ids": [
           "EV_LUCI_SUMMARY"
         ]
@@ -476,14 +506,14 @@
       "gravity_method": "ISS orbital freefall (MSG)",
       "flow_direction": "concurrent",
       "flow_protocol": "changing_during_test",
-      "raw_flow_display": "stepped_display_O15a",
-      "fan_setting": "duct_fan_varied",
-      "calibration_id": "CAL_BASSII_TABLE_A5",
-      "airflow_cm_s": 3.0,
-      "raw_oxygen_display": "15.6_raw_pct",
-      "initial_oxygen_pct": 15.6,
-      "final_oxygen_pct": 15.2,
-      "endpoint_oxygen_pct": 15.2,
+      "raw_flow_display": "57.5, 47, 42, 41 (2.3, 1.0, 0.5, 0.35, 0.32)",
+      "fan_setting": "Extinction potentiometer 0.32",
+      "calibration_id": null,
+      "airflow_cm_s": null,
+      "raw_oxygen_display": "16 to 15.6 vol% uncalibrated",
+      "initial_oxygen_pct": 17.1,
+      "final_oxygen_pct": 16.7,
+      "endpoint_oxygen_pct": 16.7,
       "pressure_kpa": null,
       "pressure_psia": null,
       "pressure_basis": "unreported",
@@ -491,10 +521,9 @@
       "observed_outcome": "quenching",
       "measured_quantities_reported": [
         "quenching",
-        "airflow_cm_s",
         "oxygen_pct"
       ],
-      "anomalies": "Olson Table A.5 (printed pp. 110-111) test O15a on clear 9.525 mm PMMA rod sample 218m; flow changed during test; run-level pressure is unreported.",
+      "anomalies": "Table A.5 reports O15a on clear 9.525 mm PMMA rod sample 218m, with calibrated oxygen 17.1% initially and 16.7% finally. Airflow started at 5 cm/s and extinction occurred at potentiometer setting 0.32. Endpoint airspeed and run pressure are unreported.",
       "evidence_ids": [
         "EV_BASSII_O15A"
       ],
@@ -516,14 +545,14 @@
       "gravity_method": "ISS orbital freefall (MSG)",
       "flow_direction": "concurrent",
       "flow_protocol": "changing_during_test",
-      "raw_flow_display": "stepped_display_O15b",
-      "fan_setting": "duct_fan_varied",
-      "calibration_id": "CAL_BASSII_TABLE_A5",
-      "airflow_cm_s": 1.5,
-      "raw_oxygen_display": "15.2_raw_pct",
-      "initial_oxygen_pct": 15.2,
-      "final_oxygen_pct": 14.9,
-      "endpoint_oxygen_pct": 14.9,
+      "raw_flow_display": "57.5, 42, 41, 40 (2.3, 0.5, 0.35, 0.34, 0.33, 0.32, 0.31, 0.30, 0.29, 0.28, 0.27)",
+      "fan_setting": "Extinction potentiometer 0.27",
+      "calibration_id": null,
+      "airflow_cm_s": null,
+      "raw_oxygen_display": "15.6 to 14.5 vol% uncalibrated",
+      "initial_oxygen_pct": 16.7,
+      "final_oxygen_pct": 15.6,
+      "endpoint_oxygen_pct": 15.6,
       "pressure_kpa": null,
       "pressure_psia": null,
       "pressure_basis": "unreported",
@@ -531,10 +560,9 @@
       "observed_outcome": "quenching",
       "measured_quantities_reported": [
         "quenching",
-        "airflow_cm_s",
         "oxygen_pct"
       ],
-      "anomalies": "Olson Table A.5 (printed pp. 110-111) re-burn test O15b on shared physical sample 218m (clear 9.525 mm rod); flow changed during test; repeated-burn sample history limitation; pressure unreported.",
+      "anomalies": "Table A.5 reports O15b on clear 9.525 mm PMMA rod sample 218m, with calibrated oxygen 16.7% initially and 15.6% finally. Airflow started at 5 cm/s and extinction occurred at potentiometer setting 0.27. Endpoint airspeed and run pressure are unreported. This was a reburn of O15a's rod.",
       "evidence_ids": [
         "EV_BASSII_O15B"
       ],
@@ -550,11 +578,11 @@
       "investigation_id": "BASS-II",
       "ordinal": 1,
       "elapsed_time_s": null,
-      "raw_flow_display": "step_1_initial",
-      "airflow_cm_s": null,
+      "raw_flow_display": "Approx. 4.5 cm/s (Figure 6.4)",
+      "airflow_cm_s": 4.5,
       "oxygen_pct": 14.8,
       "oxygen_basis": "initial",
-      "observation": "Initial stage in BASS-II Figure 6.4 (printed pp. 69-71) at 14.8% initial O2 before step-down airflow reductions; elapsed time and calibrated stage velocity unset pending row-level verification.",
+      "observation": "Airflow and any transition time are approximate readings from Figure 6.4. First plotted airflow plateau. Oxygen is reported for the test start.",
       "evidence_id": "EV_BASSII_FIG64_SEQ",
       "review_status": "verified"
     },
@@ -564,12 +592,12 @@
       "figure_id": "FIG_6_4",
       "investigation_id": "BASS-II",
       "ordinal": 2,
-      "elapsed_time_s": null,
-      "raw_flow_display": "step_2_intermediate",
-      "airflow_cm_s": null,
+      "elapsed_time_s": 320.0,
+      "raw_flow_display": "Approx. 2.1 cm/s (Figure 6.4)",
+      "airflow_cm_s": 2.1,
       "oxygen_pct": null,
       "oxygen_basis": "staged",
-      "observation": "Intermediate downward airflow step in BASS-II Figure 6.4; intermediate oxygen percentage and elapsed time left null because only initial (14.8%) and final (13.6%) oxygen are explicitly stated in the figure prose.",
+      "observation": "Airflow and any transition time are approximate readings from Figure 6.4. First reduction visible in the plot. The prose refers to this plateau as 2 cm/s.",
       "evidence_id": "EV_BASSII_FIG64_SEQ",
       "review_status": "verified"
     },
@@ -579,12 +607,12 @@
       "figure_id": "FIG_6_4",
       "investigation_id": "BASS-II",
       "ordinal": 3,
-      "elapsed_time_s": null,
-      "raw_flow_display": "step_3_intermediate",
-      "airflow_cm_s": null,
+      "elapsed_time_s": 590.0,
+      "raw_flow_display": "Approx. 1.5 cm/s (Figure 6.4)",
+      "airflow_cm_s": 1.5,
       "oxygen_pct": null,
       "oxygen_basis": "staged",
-      "observation": "Subsequent downward airflow step in BASS-II Figure 6.4; intermediate oxygen percentage and flow velocity left null.",
+      "observation": "Airflow and any transition time are approximate readings from Figure 6.4. The report associates this reduction with the flame length ceasing to grow.",
       "evidence_id": "EV_BASSII_FIG64_SEQ",
       "review_status": "verified"
     },
@@ -594,13 +622,28 @@
       "figure_id": "FIG_6_4",
       "investigation_id": "BASS-II",
       "ordinal": 4,
-      "elapsed_time_s": null,
-      "raw_flow_display": "step_4_final",
-      "airflow_cm_s": null,
+      "elapsed_time_s": 840.0,
+      "raw_flow_display": "Approx. 1.1 cm/s (Figure 6.4)",
+      "airflow_cm_s": 1.1,
+      "oxygen_pct": null,
+      "oxygen_basis": "staged",
+      "observation": "Airflow and any transition time are approximate readings from Figure 6.4. Third reduction visible in the plot.",
+      "evidence_id": "EV_BASSII_FIG64_SEQ",
+      "review_status": "verified"
+    },
+    {
+      "phase_id": "PHASE_FIG64_5",
+      "run_id": null,
+      "figure_id": "FIG_6_4",
+      "investigation_id": "BASS-II",
+      "ordinal": 5,
+      "elapsed_time_s": 1100.0,
+      "raw_flow_display": "Approx. 1.0 cm/s (Figure 6.4)",
+      "airflow_cm_s": 1.0,
       "oxygen_pct": 13.6,
       "oxygen_basis": "final",
-      "observation": "Final stage in BASS-II Figure 6.4 where oxygen reached 13.6% at the end of the stepped-down airflow sequence.",
-      "evidence_id": "EV_BASSII_FIG64_SEQ",
+      "observation": "Airflow and any transition time are approximate readings from Figure 6.4. Quenching occurred more than 100 s after the last flow change. Oxygen is the final test reading.",
+      "evidence_id": "EV_BASSII_FIG64_FINAL",
       "review_status": "verified"
     }
   ],
@@ -613,12 +656,12 @@
       "scope": "run",
       "field_name": "initial_oxygen_pct",
       "printed_page": "110",
-      "pdf_page": "122",
-      "locator_detail": "Appendix A, Olson Table A.5, Row O15a (printed pp. 110\u2013111), Sample 218m (clear 9.525 mm PMMA rod)",
-      "reviewed_fact": "Candidate test O15a in Olson Table A.5 burned clear 9.525 mm diameter (4.7625 mm radius) PMMA rod sample 218m under concurrent flow that changed during the test (15.6% initial O2, 15.2% final O2, calibrated flow 3.0 cm/s), ending in quenching with run-level pressure unreported.",
-      "original_value": "15.6",
+      "pdf_page": "118",
+      "locator_detail": "Olson Table A.5, row O15a, sample 218m",
+      "reviewed_fact": "Table A.5 reports O15a on clear 9.525 mm PMMA rod sample 218m, with calibrated oxygen 17.1% initially and 16.7% finally. Airflow started at 5 cm/s and extinction occurred at potentiometer setting 0.32. Endpoint airspeed and run pressure are unreported.",
+      "original_value": "17.1",
       "original_unit": "% O2",
-      "normalized_value": 15.6,
+      "normalized_value": 17.1,
       "normalized_unit": "%",
       "measurement_basis": "initial",
       "quality_flag": "author_reported"
@@ -630,13 +673,13 @@
       "record_type": "run",
       "scope": "run",
       "field_name": "initial_oxygen_pct",
-      "printed_page": "111",
-      "pdf_page": "123",
-      "locator_detail": "Appendix A, Olson Table A.5, Row O15b (printed pp. 110\u2013111), Sample 218m (clear 9.525 mm PMMA rod)",
-      "reviewed_fact": "Candidate test O15b in Olson Table A.5 re-burned the same physical sample 218m (clear 9.525 mm PMMA rod) with changing flow during the test (15.2% initial O2, 14.9% final O2, calibrated flow 1.5 cm/s), ending in quenching with run-level pressure unreported.",
-      "original_value": "15.2",
+      "printed_page": "110",
+      "pdf_page": "118",
+      "locator_detail": "Olson Table A.5, row O15b, sample 218m",
+      "reviewed_fact": "Table A.5 reports O15b on clear 9.525 mm PMMA rod sample 218m, with calibrated oxygen 16.7% initially and 15.6% finally. Airflow started at 5 cm/s and extinction occurred at potentiometer setting 0.27. Endpoint airspeed and run pressure are unreported. This was a reburn of O15a's rod.",
+      "original_value": "16.7",
       "original_unit": "% O2",
-      "normalized_value": 15.2,
+      "normalized_value": 16.7,
       "normalized_unit": "%",
       "measurement_basis": "initial",
       "quality_flag": "author_reported"
@@ -649,15 +692,15 @@
       "scope": "phase",
       "field_name": "oxygen_pct",
       "printed_page": "69-71",
-      "pdf_page": "81-83",
+      "pdf_page": "77-79",
       "locator_detail": "Section 6.1, Figure 6.4 Staged-Flow PMMA Sequence (printed pp. 69\u201371)",
-      "reviewed_fact": "In BASS-II Figure 6.4, airflow was reduced in steps and oxygen went from 14.8% initially to 13.6% finally; intermediate oxygen values, elapsed times, and unverified stage velocities remain null until reconciled with a specific run ID.",
+      "reviewed_fact": "Figure 6.4 shows five airflow plateaus, read approximately as 4.5, 2.1, 1.5, 1.1 and 1.0 cm/s. The prose reports 14.8% initial and 13.6% final oxygen. Intermediate oxygen is unreported.",
       "original_value": "14.8",
       "original_unit": "% O2",
       "normalized_value": 14.8,
       "normalized_unit": "%",
       "measurement_basis": "initial",
-      "quality_flag": "provisional_figure"
+      "quality_flag": "digitized_approximate"
     },
     {
       "evidence_id": "EV_BASSII_FIG64_FINAL",
@@ -667,7 +710,7 @@
       "scope": "phase",
       "field_name": "final_oxygen_pct",
       "printed_page": "69-71",
-      "pdf_page": "81-83",
+      "pdf_page": "77-79",
       "locator_detail": "Section 6.1, Figure 6.4 Endpoint Oxygen (printed pp. 69\u201371)",
       "reviewed_fact": "At the end of the staged airflow reduction in BASS-II Figure 6.4, oxygen concentration reached 13.6%.",
       "original_value": "13.6",
@@ -697,54 +740,54 @@
     },
     {
       "evidence_id": "EV_SAFFIRE_I_SUMMARY",
-      "source_id": "SRC_SAFFIRE_I_PSI98",
+      "source_id": "SRC_SAFFIRE_I_RESULTS",
       "record_id": "Saffire-I",
       "record_type": "investigation",
       "scope": "study",
-      "field_name": "airflow_cm_s",
-      "printed_page": "1",
-      "pdf_page": "1",
-      "locator_detail": "PSI-98 (DOI 10.60555/0t15-1z43) Investigation Summary & Cygnus Enclosure Telemetry",
-      "reviewed_fact": "Saffire-I burned a large 0.4 m x 0.94 m SIBAL cotton-fiberglass fabric sheet aboard uncrewed Cygnus at 20 cm/s airflow in ~21% O2, ~101.3 kPa.",
-      "original_value": "20",
-      "original_unit": "cm/s",
-      "normalized_value": 20.0,
-      "normalized_unit": "cm/s",
-      "measurement_basis": "nominal",
+      "field_name": "flame_spread_rate_mm_s",
+      "printed_page": null,
+      "pdf_page": "16-17, 29",
+      "locator_detail": "NTRS 20170008805, Saffire-I sample 1-1 and Table I",
+      "reviewed_fact": "Sample 1-1 was a 40.6 x 94 cm SIBAL sheet aboard uncrewed Cygnus. It burned for 420 s at 20 cm/s concurrent airflow, spread at 1.8 mm/s on average and extinguished after scheduled airflow shutoff.",
+      "original_value": "1.8",
+      "original_unit": "mm/s",
+      "normalized_value": 1.8,
+      "normalized_unit": "mm/s",
+      "measurement_basis": "measured",
       "quality_flag": "author_reported"
     },
     {
       "evidence_id": "EV_SAMER_SUMMARY",
-      "source_id": "SRC_SAMER_PSI101",
+      "source_id": "SRC_SAMER_MEYER2018",
       "record_id": "SAME-R",
       "record_type": "investigation",
       "scope": "study",
-      "field_name": "smoke_particle_size",
-      "printed_page": "12",
-      "pdf_page": "18",
-      "locator_detail": "PSI-101 (DOI 10.60555/2np7-jv14) Final Report, Section 3 Smoke Particle Size Distributions",
-      "reviewed_fact": "SAME-R measured moment-average smoke particle diameters and aging from overheated spacecraft materials (PMMA, cotton, Kapton, silicone, Teflon) in ISS microgravity.",
-      "original_value": "21.0",
-      "original_unit": "% O2",
-      "normalized_value": 21.0,
-      "normalized_unit": "%",
-      "measurement_basis": "nominal",
+      "field_name": "tem_count_mean_diameter_um",
+      "printed_page": "Table 1",
+      "pdf_page": null,
+      "locator_detail": "Meyer et al. (2018), Table 1, ISS Kapton run 62",
+      "reviewed_fact": "Kapton run 62 count-mean particle diameter increased from 0.180 to 0.235 micrometers by microscopy and from 0.148 to 0.243 micrometers by the aerosol moment method, at 38.8 and 807.6 s of net aging.",
+      "original_value": "0.235",
+      "original_unit": "\u00b5m",
+      "normalized_value": 0.235,
+      "normalized_unit": "\u00b5m",
+      "measurement_basis": "measured",
       "quality_flag": "author_reported"
     },
     {
       "evidence_id": "EV_FLEX_SUMMARY",
-      "source_id": "SRC_FLEX_PSI69",
+      "source_id": "SRC_FLEX_TP",
       "record_id": "FLEX",
       "record_type": "investigation",
       "scope": "study",
-      "field_name": "droplet_extinction",
-      "printed_page": "2",
-      "pdf_page": "2",
-      "locator_detail": "PSI-69 (DOI 10.60555/mbq8-0451) FLEX Droplet Run Summary Table",
-      "reviewed_fact": "FLEX quantified inert-gas dilution suppression and cool-flame behavior for isolated heptane and methanol fuel droplets in microgravity (15%\u201325% O2, 70\u2013300 kPa).",
-      "original_value": "15.0",
-      "original_unit": "% O2",
-      "normalized_value": 15.0,
+      "field_name": "initial_oxygen_pct",
+      "printed_page": null,
+      "pdf_page": "30-31, 204, 236",
+      "locator_detail": "NASA/TP-2015-216046, Table IX and Figures 174 and 206, runs 171 and 203",
+      "reviewed_fact": "Free-floating methanol runs 203 and 171 at 21% initial oxygen and near 1 atm used 0% and 15% CO2. Their reported extinction diameters were 1.42 and 1.59 mm. Run 171 started with a larger droplet and its extinction diameter came from a fit across missing observations. Both ended in diffusive extinction.",
+      "original_value": "21",
+      "original_unit": "%",
+      "normalized_value": 21,
       "normalized_unit": "%",
       "measurement_basis": "initial",
       "quality_flag": "author_reported"
@@ -756,15 +799,15 @@
       "record_type": "investigation",
       "scope": "shared_chamber",
       "field_name": "rod_diameter_mm",
-      "printed_page": "6",
-      "pdf_page": "7",
-      "locator_detail": "NTRS 20250010653, Rotating New Shepard Sounding Rocket Flight Experiment",
-      "reviewed_fact": "LUCI burned a 4 mm diameter acrylic (PMMA) rod and cotton-fiberglass fabric simultaneously in normal-pressure air (21.0% O2, 101.3 kPa) aboard a rotating Blue Origin New Shepard sounding rocket simulating lunar gravity (~1/6 g); oxygen readings apply at shared-chamber level.",
+      "printed_page": null,
+      "pdf_page": "12, 16, 19-22, 42",
+      "locator_detail": "NTRS 20250010653, shared chamber and material results",
+      "reviewed_fact": "A 4 mm acrylic rod and SIBAL fabric burned together in normal-pressure air aboard a rotating New Shepard rocket at simulated lunar gravity. Flame-tip spread rates were 1.5 mm/s for acrylic and 1.1 mm/s for fabric. Oxygen readings apply at chamber level. Numeric chamber pressure is unreported in the presentation.",
       "original_value": "4",
       "original_unit": "mm",
-      "normalized_value": 4.0,
+      "normalized_value": 4,
       "normalized_unit": "mm",
-      "measurement_basis": "nominal",
+      "measurement_basis": "measured",
       "quality_flag": "author_reported"
     },
     {

@@ -598,7 +598,7 @@ def compile_catalog(data_dir: Path, gen_dir: Path, export_dir: Path) -> None:
         "unit_normalizations": {
             "oxygen_pct": "Volume percent (%). Fractions multiplied by 100.",
             "pressure_kpa": "Absolute kilopascals (kPa). Converted from psia via x 6.894757. Unreported stays null.",
-            "airflow_cm_s": "Calibrated velocity in cm/s. Converted from m/s via x 100 only when calibration_id is present.",
+            "airflow_cm_s": "Run velocity in cm/s. Converted from m/s via x 100 only when calibration_id is present. Figure 6.4 phase velocities and transition times are approximate readings from the plotted trace.",
             "dimensions_mm": "Sample radius, diameter (2 * radius), and length in millimeters (mm).",
         },
         "null_semantics": "Null values indicate unreported or unmeasured quantities and never match each other in run comparisons.",

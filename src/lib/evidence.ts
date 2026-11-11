@@ -179,10 +179,6 @@ export function buildGroundedContextAndAllowlist(
     addEv("EV_PMMA_COHORT_24");
     allowedNumbers.add(9.525);
     allowedNumbers.add(4.7625);
-    allowedNumbers.add(15.2);
-    allowedNumbers.add(14.9);
-    allowedNumbers.add(3.0);
-    allowedNumbers.add(1.5);
   }
 
   // 3. Add evidence for explicitly selected/compared runs
@@ -204,9 +200,6 @@ export function buildGroundedContextAndAllowlist(
   addEv("EV_EXPLORATION_ATM_2024");
   addEv("EV_EXPLORATION_ATM_O2");
   addEv("EV_PARTIAL_G_REVIEW");
-  allowedNumbers.add(21.0);
-  allowedNumbers.add(101.3);
-  allowedNumbers.add(14.7);
   allowedNumbers.add(4.0);
 
   if (scenario.oxygen_pct !== null && scenario.oxygen_pct !== undefined) {
@@ -440,16 +433,16 @@ export function buildReviewedFallbackExplanation(
   if (topId === "Saffire-I") {
     observedFindings.push({
       statement: escapeHtml(
-        "In Saffire-I aboard the uncrewed Cygnus spacecraft, a meter-scale SIBAL cotton-fiberglass fabric panel burned under 20 cm/s ventilation flow in microgravity, demonstrating steady large-scale flame spread and enclosure pressure rise."
+        topStudy.research_lead.finding
       ),
       evidence_ids: ["EV_SAFFIRE_I_SUMMARY"],
-      source_ids: ["SRC_SAFFIRE_I_PSI98"],
+      source_ids: ["SRC_SAFFIRE_I_RESULTS"],
       numeric_facts: [
         {
-          label: "Saffire-I Ventilation Airflow",
-          value: 20.0,
-          unit: "cm/s",
-          basis: "nominal",
+          label: "Saffire-I Average Flame Spread",
+          value: 1.8,
+          unit: "mm/s",
+          basis: "measured",
           evidence_id: "EV_SAFFIRE_I_SUMMARY",
         },
       ],
@@ -457,16 +450,16 @@ export function buildReviewedFallbackExplanation(
   } else if (topId === "SAME-R") {
     observedFindings.push({
       statement: escapeHtml(
-        "In SAME-R inside the ISS Microgravity Science Glovebox, thermal pyrolysis of spacecraft polymers in microgravity (~21.0% O2) produced larger aggregated smoke particle diameters than 1 g tests due to longer hot-zone residence time."
+        topStudy.research_lead.finding
       ),
       evidence_ids: ["EV_SAMER_SUMMARY"],
-      source_ids: ["SRC_SAMER_PSI101"],
+      source_ids: ["SRC_SAMER_MEYER2018"],
       numeric_facts: [
         {
-          label: "SAME-R Nominal Oxygen",
-          value: 21.0,
-          unit: "%",
-          basis: "nominal",
+          label: "Aged Kapton Count-Mean Diameter (Microscopy)",
+          value: 0.235,
+          unit: "µm",
+          basis: "measured",
           evidence_id: "EV_SAMER_SUMMARY",
         },
       ],
@@ -474,14 +467,14 @@ export function buildReviewedFallbackExplanation(
   } else if (topId === "FLEX") {
     observedFindings.push({
       statement: escapeHtml(
-        "In FLEX inside the ISS Combustion Integrated Rack, isolated liquid heptane and methanol droplets (proxy droplet geometry) were burned down to 15.0% O2 under inert-gas dilution to quantify radiative quenching and cool-flame behavior."
+        `${topStudy.research_lead.finding} ${topStudy.research_lead.limitation}`
       ),
       evidence_ids: ["EV_FLEX_SUMMARY"],
-      source_ids: ["SRC_FLEX_PSI69"],
+      source_ids: ["SRC_FLEX_TP"],
       numeric_facts: [
         {
-          label: "FLEX Minimum Tested Oxygen",
-          value: 15.0,
+          label: "FLEX Comparison Initial Oxygen",
+          value: 21.0,
           unit: "%",
           basis: "initial",
           evidence_id: "EV_FLEX_SUMMARY",
@@ -491,7 +484,7 @@ export function buildReviewedFallbackExplanation(
   } else {
     observedFindings.push({
       statement: escapeHtml(
-        "In BASS-II concurrent-flow tests on the ISS (24 published cohort runs), stepping forced airflow down in Figure 6.4 caused flame weakening and quenching as oxygen decreased from 14.8% initially to 13.6% finally, while candidate Table A.5 runs O15a (15.6% initial O2) and O15b (15.2% initial O2) burned clear 9.525 mm PMMA rod sample 218m."
+        "BASS-II Figure 6.4 records quenching after five progressively lower airflow plateaus as oxygen fell from 14.8% to 13.6%. Table A.5 reports calibrated initial oxygen of 17.1% for O15a and 16.7% for O15b. The tests used the same PMMA rod and report extinction potentiometer settings."
       ),
       evidence_ids: [
         "EV_BASSII_FIG64_SEQ",
@@ -527,7 +520,7 @@ export function buildReviewedFallbackExplanation(
   const applicabilityLimits: ExplanationResponse["applicability_limits"] = [
     {
       statement: escapeHtml(
-        "Candidate runs O15a and O15b in BASS-II Table A.5 shared physical sample 218m (repeated-burn history), experienced flow changes during the tests, and left run-level pressure unreported. In LUCI, a 4 mm acrylic rod and cotton-fiberglass fabric burned simultaneously aboard a rotating New Shepard sounding rocket (~1/6 g) in normal-pressure air (21.0% O2), so oxygen readings apply at shared-chamber scope."
+        "BASS-II tests O15a and O15b shared sample 218m and changed airflow during the burns. Endpoint airspeed and run pressure are unreported. In LUCI, a 4 mm acrylic rod and cotton-fiberglass fabric burned together in normal-pressure air at simulated lunar gravity. Oxygen observations apply to the shared chamber."
       ),
       evidence_ids: ["EV_BASSII_O15A", "EV_BASSII_O15B", "EV_LUCI_SUMMARY"],
       source_ids: ["SRC_BASSII_TM2021", "SRC_LUCI_NTRS2025"],
@@ -536,7 +529,7 @@ export function buildReviewedFallbackExplanation(
           label: "LUCI Acrylic Rod Diameter",
           value: 4.0,
           unit: "mm",
-          basis: "nominal",
+          basis: "measured",
           evidence_id: "EV_LUCI_SUMMARY",
         },
       ],

@@ -1,0 +1,6 @@
+investigation_id;test_number;report_test_id;flex_identifier;test_date;test_time_gmt;fuel;ambient_pressure_mmhg;initial_o2_mole_fraction;initial_n2_mole_fraction;initial_co2_mole_fraction;initial_he_mole_fraction;initial_droplet_diameter_mm;reported_diameter_at_visible_flame_extinction_mm;burning_rate_mm2_s;burn_time_s;test_end_raw;source_id;crosscheck_source_id;validation_status;notes
+FLEX;1;FLEX-001;20CAL08;2009-03-05;17:22:03;Methanol;757.7;0.21;0.79;0;0;1.69;0.89;0.52;4.3;Disruption;FLEX_PSI69;FLEX_TP2015216046;Table values cross-checked;Source lists a diameter alongside Disruption. Preserve both values and exclude this test from extinction-only comparisons.
+FLEX;2;FLEX-002;20CAL10;2009-03-05;19:20:06;Methanol;762;0.21;0.79;0;0;1.86;0.94;0.6;5;Extinction;FLEX_PSI69;FLEX_TP2015216046;Table values cross-checked;
+FLEX;3;FLEX-003;20CAL12;2009-03-05;21:17:46;Methanol;764.2;0.21;0.79;0;0;1.61;0.92;0.58;3.2;Extinction;FLEX_PSI69;FLEX_TP2015216046;Table values cross-checked;
+FLEX;4;FLEX-004;30CAL02;2009-03-31;17:16:18;Methanol;760;0.21;0.79;0;0;2.06;;0.6;7.64;Extinction;FLEX_PSI69;FLEX_TP2015216046;Table values cross-checked;NASA reports Extinction with no numerical diameter in either table.
+FLEX;5;FLEX-005;30CAL03;2009-03-31;19:00:48;Methanol;760;0.21;0.79;0;0;1.92;0.81;0.48;6.34;Extinction;FLEX_PSI69;FLEX_TP2015216046;Table values cross-checked;

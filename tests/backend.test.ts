@@ -496,25 +496,21 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
 
     expect(evalRes.body.counts.runs).toBe(2);
     expect(evalRes.body.counts.verified_runs).toBe(2);
-    expect(evalRes.body.counts.phases).toBe(4);
+    expect(evalRes.body.counts.phases).toBe(5);
 
     const figPhases = evalRes.body.phases.filter(
       (p: { figure_id: string }) => p.figure_id === "FIG_6_4"
     );
-    expect(figPhases).toHaveLength(4);
+    expect(figPhases).toHaveLength(5);
     expect(figPhases[0].run_id).toBeNull();
     expect(figPhases[0].oxygen_pct).toBe(14.8);
     expect(figPhases[0].oxygen_basis).toBe("initial");
-    // Intermediate values must stay null
-    expect(figPhases[1].oxygen_pct).toBeNull();
-    expect(figPhases[1].airflow_cm_s).toBeNull();
-    expect(figPhases[1].elapsed_time_s).toBeNull();
-    expect(figPhases[2].oxygen_pct).toBeNull();
-    expect(figPhases[2].airflow_cm_s).toBeNull();
-    expect(figPhases[2].elapsed_time_s).toBeNull();
-    // Final stage
-    expect(figPhases[3].oxygen_pct).toBe(13.6);
-    expect(figPhases[3].oxygen_basis).toBe("final");
+    expect(figPhases.map((p: { oxygen_pct: number | null }) => p.oxygen_pct))
+      .toEqual([14.8, null, null, null, 13.6]);
+    expect(figPhases[1].airflow_cm_s).toBe(2.1);
+    expect(figPhases[1].elapsed_time_s).toBe(320);
+    expect(figPhases[1].observation).toMatch(/approximate/i);
+    expect(figPhases[4].oxygen_basis).toBe("final");
 
     const figDrawer = evalRes.body.evidence_drawers["FIG_6_4"];
     expect(figDrawer.length).toBeGreaterThanOrEqual(2);
@@ -524,7 +520,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
       .get("/api/export/phases")
       .expect(200);
     expect(exportPhasesRes.headers["x-runs-count"]).toBe("2");
-    expect(exportPhasesRes.headers["x-phases-count"]).toBe("4");
+    expect(exportPhasesRes.headers["x-phases-count"]).toBe("5");
     expect(exportPhasesRes.text).toContain("PHASE_FIG64_1");
     expect(exportPhasesRes.text).toContain("14.8");
     expect(exportPhasesRes.text).toContain("13.6");
@@ -573,7 +569,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
         applicability_limits: [
           {
             statement:
-              "LUCI burned a 4 mm PMMA rod in 21.0% O2 normal-pressure air.",
+              "LUCI burned a 4 mm PMMA rod in normal-pressure air.",
             evidence_ids: ["EV_LUCI_SUMMARY"],
             source_ids: ["SRC_LUCI_NTRS2025"],
           },
@@ -648,7 +644,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
         {
           statement: "Droplet burning was tested at 15.0% O2.",
           evidence_ids: ["EV_FLEX_SUMMARY"],
-          source_ids: ["SRC_FLEX_PSI69"],
+          source_ids: ["SRC_FLEX_TP"],
         },
       ],
       applicability_limits: [
@@ -826,7 +822,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
         applicability_limits: [
           {
             statement:
-              "LUCI tested a 4 mm acrylic rod and fabric simultaneously in 21.0% O2 normal-pressure air.",
+              "LUCI tested a 4 mm acrylic rod and fabric simultaneously in normal-pressure air.",
             evidence_ids: ["EV_LUCI_SUMMARY"],
             source_ids: ["SRC_LUCI_NTRS2025"],
             numeric_facts: [
@@ -834,7 +830,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
                 label: "LUCI Rod Diameter",
                 value: 4.0,
                 unit: "mm",
-                basis: "nominal",
+                basis: "measured",
                 evidence_id: "EV_LUCI_SUMMARY",
               },
             ],
@@ -970,7 +966,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
                         observed_findings: [
                           {
                             statement:
-                              "BASS-II runs O15a and O15b burned sample 218m at 3 cm/s and 1.5 cm/s opposing flow.",
+                              "BASS-II runs O15a and O15b burned sample 218m at calibrated initial oxygen of 17.1% and 16.7%.",
                             evidence_ids: ["EV_BASSII_O15A", "EV_BASSII_O15B"],
                             source_ids: ["SRC_BASSII_TM2021"],
                           },
@@ -978,7 +974,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
                         applicability_limits: [
                           {
                             statement:
-                              "LUCI burned a 4 mm PMMA rod in 21% O2 normal-pressure air at 101.3 kPa.",
+                              "LUCI burned a 4 mm PMMA rod in normal-pressure air.",
                             evidence_ids: ["EV_LUCI_SUMMARY"],
                             source_ids: ["SRC_LUCI_NTRS2025"],
                           },

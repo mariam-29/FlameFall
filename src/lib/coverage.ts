@@ -106,10 +106,10 @@ export function resolveScenario(
     base.geometry_shape = primaryRun?.geometry_shape ?? "rod";
     base.requested_outcome = primaryRun?.observed_outcome ?? "quenching";
     base.gravity_regime = primaryRun?.gravity_regime ?? "microgravity";
-    base.oxygen_pct = primaryRun?.initial_oxygen_pct ?? 15.6;
+    base.oxygen_pct = primaryRun?.initial_oxygen_pct ?? null;
     base.pressure_kpa = primaryRun?.pressure_kpa ?? null; // Unreported at run level in Table A.5
     base.pressure_psia = primaryRun?.pressure_psia ?? null;
-    base.airflow_cm_s = primaryRun?.airflow_cm_s ?? 3.0;
+    base.airflow_cm_s = primaryRun?.airflow_cm_s ?? null;
     base.selected_run_ids =
       requestedRuns.length > 0
         ? requestedRuns
@@ -862,15 +862,10 @@ export function checkScenarioApplicability(
         {
           investigation_id: "LUCI",
           study_value_display:
-            "21.0% O2 (normal-pressure air in shared sounding-rocket chamber)",
-          status:
-            Math.abs(resolvedScenario.oxygen_pct - 21.0) <= 0.5
-              ? "within_reported_range"
-              : "outside_reported_range",
+            "Shared-chamber oxygen readings during the burns",
+          status: "unreported",
           reason:
-            Math.abs(resolvedScenario.oxygen_pct - 21.0) <= 0.5
-              ? "Matches LUCI normal-air oxygen concentration (21% O2 at shared-chamber level)."
-              : `Target ${resolvedScenario.oxygen_pct}% O2 is outside LUCI normal-air atmosphere (21.0% O2).`,
+            "The presentation gives chamber readings during the test. It does not establish a material-specific oxygen range.",
         },
       ],
     });
@@ -902,15 +897,10 @@ export function checkScenarioApplicability(
         {
           investigation_id: "LUCI",
           study_value_display:
-            "101.3 kPa (14.7 psia normal-pressure air in shared sounding-rocket chamber)",
-          status:
-            Math.abs(resolvedScenario.pressure_kpa - 101.3) <= 2.0
-              ? "within_reported_range"
-              : "outside_reported_range",
+            "Normal-pressure air in the shared chamber",
+          status: "unreported",
           reason:
-            Math.abs(resolvedScenario.pressure_kpa - 101.3) <= 2.0
-              ? "Matches LUCI normal-pressure chamber air (~101.3 kPa)."
-              : `Target ${resolvedScenario.pressure_kpa} kPa (${psiaEquivalent} psia) is outside LUCI normal-pressure chamber air (101.3 kPa).`,
+            "The LUCI presentation does not provide numeric chamber pressure.",
         },
       ],
     });
@@ -1149,7 +1139,7 @@ export function checkScenarioApplicability(
         ? ["BASS-II", "LUCI"]
         : ["BASS-II"],
     evidence_gap_summary:
-      "Within this curated collection, BASS-II provides PMMA concurrent-flow extinction evidence in ISS microgravity (13.6–21% O2, sample 218m and Figure 6.4), and LUCI provides a simulated lunar-gravity (~1/6 g) comparison aboard a rotating New Shepard sounding rocket in normal-pressure air (21% O2, 101.3 kPa, 4 mm PMMA rod + fabric in a shared chamber), but no verified test in this collection covers PMMA simultaneously at 1/6 g in the 34% O2, 8.2 psia (56.5 kPa) exploration atmosphere.",
+      "BASS-II provides ISS microgravity PMMA extinction evidence. LUCI provides a simulated lunar-gravity comparison in normal-pressure air with acrylic and fabric in a shared chamber. No verified test in this collection covers PMMA simultaneously at 1/6 g, 34% oxygen and 8.2 psia (56.5 kPa).",
     defer_predictive_interpolation_note:
       "Predictive interpolation is intentionally deferred: NASA partial-gravity fire safety research (SRC_PARTIAL_G_REVIEW) shows buoyant convection at ~1/6 g can replenish oxygen faster than microgravity diffusion while generating weaker blowoff shear than 1 g, so partial-gravity flammability can extend beyond both microgravity and Earth-gravity limits.",
   };

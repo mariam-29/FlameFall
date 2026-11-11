@@ -19,7 +19,7 @@
     "version": "2021-Final",
     "accessed_date": "2026-11-09",
     "reuse_terms": "Public Domain NASA Technical Memorandum; cite NASA/TM-20210011385",
-    "original_filenames": ["20210011385.pdf"]
+    "original_filenames": ["TM-20210011385.pdf"]
   },
   {
     "id": "SRC_PMMA_CONCURRENT_PAPER",
@@ -52,7 +52,7 @@
     "version": "PSI-101-v1.0",
     "accessed_date": "2026-11-09",
     "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/2np7-jv14",
-    "original_filenames": ["SAME-R_Final_Report_Particle_Sizes.pdf"]
+    "original_filenames": ["PSI-101_Experimental table_SAME-R.csv"]
   },
   {
     "id": "SRC_FLEX_PSI69",
@@ -63,7 +63,7 @@
     "version": "PSI-69-v1.0",
     "accessed_date": "2026-11-09",
     "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/mbq8-0451",
-    "original_filenames": ["FLEX_Droplet_Run_Table.csv"]
+    "original_filenames": ["PSI-69_Experimental_Table_Tests_1-5.csv"]
   },
   {
     "id": "SRC_LUCI_NTRS2025",
@@ -74,7 +74,7 @@
     "version": "2025-NTRS",
     "accessed_date": "2026-11-09",
     "reuse_terms": "Public Domain NASA Presentation; cite NTRS 20250010653",
-    "original_filenames": ["20250010653.pdf"]
+    "original_filenames": ["ASGSR 2025-LUCI-Ferkul-Presentation-v2-20250010653.pdf"]
   },
   {
     "id": "SRC_EXPLORATION_ATM_2024",
@@ -97,5 +97,38 @@
     "accessed_date": "2026-11-09",
     "reuse_terms": "Public Domain NASA Review; cite NTRS 20220015800",
     "original_filenames": ["Partial_Gravity_Fire_Safety_Review.pdf"]
+  },
+  {
+    "id": "SRC_SAFFIRE_I_RESULTS",
+    "publisher": "NASA Technical Reports Server",
+    "title": "Results of Large-Scale Spacecraft Flammability Tests",
+    "url": "https://ntrs.nasa.gov/citations/20170008805",
+    "doi_or_ntrs_id": "NTRS-20170008805",
+    "version": "Published",
+    "accessed_date": "2026-11-11",
+    "reuse_terms": "Cite the published source.",
+    "original_filenames": ["NTRS-20170008805.pdf"]
+  },
+  {
+    "id": "SRC_SAMER_MEYER2018",
+    "publisher": "Fire Safety Journal",
+    "title": "Evaluation of Spacecraft Smoke Detector Performance in the Low-Gravity Environment",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7918997/",
+    "doi_or_ntrs_id": "10.1016/j.firesaf.2018.04.004",
+    "version": "Published",
+    "accessed_date": "2026-11-11",
+    "reuse_terms": "Cite the published source.",
+    "original_filenames": []
+  },
+  {
+    "id": "SRC_FLEX_TP",
+    "publisher": "NASA",
+    "title": "Detailed Results From the Flame Extinguishment Experiment (FLEX)",
+    "url": "https://ntrs.nasa.gov/citations/20150023456",
+    "doi_or_ntrs_id": "NASA/TP-2015-216046",
+    "version": "Published",
+    "accessed_date": "2026-11-11",
+    "reuse_terms": "Cite the published source.",
+    "original_filenames": ["NASA-TP-2015-216046.pdf"]
   }
 ]
