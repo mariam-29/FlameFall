@@ -1,0 +1,2 @@
+investigation_id;flight_test_id;flight_date;platform;gravity_regime;gravity_method;vehicle_rotation_rpm;effective_rotation_radius_m;ambient_gas;pressure_description;numeric_pressure_kpa;sample_count;chamber_count;source_id;pdf_pages;validation_status;notes
+LUCI;LUCI_FLIGHT_2025_02_04;2025-02-04;Blue Origin New Shepard;Simulated lunar gravity;Centrifugal acceleration from vehicle rotation;11;1.22;Air;Normal pressure;;2;1;LUCI_NTRS20250010653;4-5 and 12-13;Checked against presentation;Samples ignited with a short pause and burned concurrently.
