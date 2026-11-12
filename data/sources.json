@@ -1,0 +1,101 @@
+[
+  {
+    "id": "SRC_BASSII_PSI25",
+    "publisher": "NASA Physical Sciences Informatics (PSI)",
+    "title": "Burning and Suppression of Solids - II (BASS-II) Dataset (PSI-25)",
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-25",
+    "doi_or_ntrs_id": "10.60555/4qc4-de67",
+    "version": "PSI-25-v1.0",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "NASA Open Data / Public Domain (17 U.S.C. 105); cite DOI 10.60555/4qc4-de67",
+    "original_filenames": ["BASS-II_Metadata_Summary.xlsx", "BASS-II_Run_Operations_Log.csv"]
+  },
+  {
+    "id": "SRC_BASSII_TM2021",
+    "publisher": "NASA Glenn Research Center",
+    "title": "Burning and Suppression of Solids - II (BASS-II) Final Technical Report (NASA/TM-20210011385)",
+    "url": "https://ntrs.nasa.gov/citations/20210011385",
+    "doi_or_ntrs_id": "NASA/TM-20210011385",
+    "version": "2021-Final",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "Public Domain NASA Technical Memorandum; cite NASA/TM-20210011385",
+    "original_filenames": ["20210011385.pdf"]
+  },
+  {
+    "id": "SRC_PMMA_CONCURRENT_PAPER",
+    "publisher": "NASA Glenn Research Center / NTRS",
+    "title": "Concurrent-Flow Flame Spread and Extinction over Cylindrical PMMA Rods in Microgravity (24-Test ISS Cohort and Drop-Tower Companion Tests)",
+    "url": "https://ntrs.nasa.gov/citations/20150008961",
+    "doi_or_ntrs_id": "NTRS-20150008961",
+    "version": "2015-NTRS",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "Public Domain NASA Technical Manuscript; keep ISS and Drop-Tower records separate; cite NTRS 20150008961",
+    "original_filenames": ["20150008961.pdf"]
+  },
+  {
+    "id": "SRC_SAFFIRE_I_PSI98",
+    "publisher": "NASA Physical Sciences Informatics (PSI)",
+    "title": "Spacecraft Fire Experiment-I (Saffire-I) Dataset (PSI-98)",
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-98",
+    "doi_or_ntrs_id": "10.60555/0t15-1z43",
+    "version": "PSI-98-v1.0",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/0t15-1z43",
+    "original_filenames": ["Saffire-I_Summary_Telemetry.csv"]
+  },
+  {
+    "id": "SRC_SAMER_PSI101",
+    "publisher": "NASA Physical Sciences Informatics (PSI)",
+    "title": "Smoke Aerosol Measurement Experiment - Reflight (SAME-R) Dataset (PSI-101)",
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-101",
+    "doi_or_ntrs_id": "10.60555/2np7-jv14",
+    "version": "PSI-101-v1.0",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/2np7-jv14",
+    "original_filenames": ["SAME-R_Final_Report_Particle_Sizes.pdf"]
+  },
+  {
+    "id": "SRC_FLEX_PSI69",
+    "publisher": "NASA Physical Sciences Informatics (PSI)",
+    "title": "Flame Extinguishment Experiment (FLEX) Dataset (PSI-69)",
+    "url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "doi_or_ntrs_id": "10.60555/mbq8-0451",
+    "version": "PSI-69-v1.0",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "NASA Open Data / Public Domain; cite DOI 10.60555/mbq8-0451",
+    "original_filenames": ["FLEX_Droplet_Run_Table.csv"]
+  },
+  {
+    "id": "SRC_LUCI_NTRS2025",
+    "publisher": "NASA Glenn Research Center / NTRS",
+    "title": "Lunar Gravity Combustion Investigation (LUCI): 4 mm Acrylic Rod and Cotton-Fiberglass Fabric Burned Simultaneously Aboard a Rotating New Shepard Sounding Rocket",
+    "url": "https://ntrs.nasa.gov/citations/20250010653",
+    "doi_or_ntrs_id": "NTRS-20250010653",
+    "version": "2025-NTRS",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "Public Domain NASA Presentation; cite NTRS 20250010653",
+    "original_filenames": ["20250010653.pdf"]
+  },
+  {
+    "id": "SRC_EXPLORATION_ATM_2024",
+    "publisher": "NASA Johnson Space Center / NTRS",
+    "title": "Recommended Exploration Atmosphere for Crewed Lunar Surface Elements: 8.2 psia and 34% Oxygen",
+    "url": "https://ntrs.nasa.gov/citations/20240003211",
+    "doi_or_ntrs_id": "NTRS-20240003211",
+    "version": "2024-NTRS",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "Public Domain NASA Technical Report; cite NTRS 20240003211",
+    "original_filenames": ["20240003211.pdf"]
+  },
+  {
+    "id": "SRC_PARTIAL_G_REVIEW",
+    "publisher": "NASA Glenn Research Center",
+    "title": "Partial-Gravity Fire Safety Review: Buoyancy-Enhanced Flammability Limits Between Microgravity and Earth Gravity",
+    "url": "https://ntrs.nasa.gov/citations/20220015800",
+    "doi_or_ntrs_id": "NTRS-20220015800",
+    "version": "2022-Review",
+    "accessed_date": "2026-11-09",
+    "reuse_terms": "Public Domain NASA Review; cite NTRS 20220015800",
+    "original_filenames": ["Partial_Gravity_Fire_Safety_Review.pdf"]
+  }
+]
