@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown,
+  ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Copy,
   CircleAlert, ClipboardList, Database, ExternalLink, FileText, Flame, FlaskConical,
   GitCompareArrows, Info, LoaderCircle, Menu, RefreshCw, Search, ShieldCheck, SlidersHorizontal,
   X
@@ -68,8 +68,8 @@ function Header() {
   const links = [['/explore', 'Explore'], ['/runs', 'Run explorer'], ['/compare', 'Compare runs'], ['/sources', 'Sources'], ['/about', 'About the data']];
   return <header className="topbar">
     <NavLink className="brand" to="/"><span className="brand-icon"><Flame size={19}/></span><span>FLAME FALL<small>RESEARCH, REIMAGINED</small></span></NavLink>
-    <button className="mobile-menu" aria-label="Toggle navigation" onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button>
-    <nav className={open ? 'nav-links open' : 'nav-links'}>{links.map(([href, label]) => <NavLink key={href} to={href}>{label}</NavLink>)}</nav>
+    <button className="mobile-menu" aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="primary-navigation" onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button>
+    <nav id="primary-navigation" aria-label="Primary navigation" className={open ? 'nav-links open' : 'nav-links'}>{links.map(([href, label]) => <NavLink key={href} to={href}>{label}</NavLink>)}</nav>
     <a className="header-download" href={`${API_BASE}/api/export/manifest`}><ArrowDownToLine size={14}/> Data exports</a>
   </header>;
 }
@@ -102,17 +102,40 @@ function StatusPill({ value }: { value?: string | null }) {
 
 function EvidenceDrawer({ item, onClose }: { item: AnyRecord | null; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [copyState, setCopyState] = useState('');
   useEffect(() => {
+    setCopyState('');
     if (item) closeRef.current?.focus();
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const trapFocus = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !item) return;
+      const drawer = document.querySelector('.evidence-drawer');
+      const focusable = drawer?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])');
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    window.addEventListener('keydown', trapFocus);
+    return () => { window.removeEventListener('keydown', key); window.removeEventListener('keydown', trapFocus); };
   }, [item, onClose]);
   if (!item) return null;
+  const copyEvidenceId = async () => {
+    try {
+      await navigator.clipboard.writeText(String(item.evidence_id));
+      setCopyState('Evidence ID copied');
+    } catch {
+      setCopyState('Clipboard access is unavailable');
+    }
+    window.setTimeout(() => setCopyState(''), 2200);
+  };
   const sourceUrl = typeof item.source_url === 'string' && /^https?:\/\//i.test(item.source_url) ? item.source_url : '';
   return <div className="drawer-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}><aside className="evidence-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
     <div className="drawer-head"><div><p className="eyebrow">EVIDENCE RECORD</p><h2 id="drawer-title">{item.evidence_id || item.source_title || 'Evidence details'}</h2></div><button ref={closeRef} className="icon-button" onClick={onClose} aria-label="Close evidence"><X/></button></div>
     <div className="drawer-body"><div className="evidence-fact">{item.reviewed_fact || item.statement || 'No reviewed fact is available for this record.'}</div>
+      {item.evidence_id && <div className="evidence-copy-row"><span>Evidence ID</span><button className="copy-button" onClick={() => void copyEvidenceId()}><Copy size={14}/>{copyState === 'Evidence ID copied' ? 'Copied' : 'Copy ID'}</button><span className="sr-only" role="status" aria-live="polite">{copyState}</span></div>}
       <Detail label="Source" value={item.source_title}/><Detail label="DOI / NTRS ID" value={item.doi_or_ntrs_id}/><Detail label="Record" value={item.record_id}/><Detail label="Scope" value={item.scope}/><Detail label="Page" value={item.page_display || item.printed_page || item.pdf_page}/><Detail label="Locator" value={item.locator_detail}/><Detail label="Quality" value={item.quality_flag}/><Detail label="Measurement basis" value={item.measurement_basis}/><Detail label="Original value" value={[item.original_value,item.original_unit].filter(Boolean).join(' ')}/><Detail label="Normalized value" value={[item.normalized_value,item.normalized_unit].filter(v => v !== null && v !== undefined).join(' ')}/>
       {sourceUrl && <a className="source-link" href={sourceUrl} target="_blank" rel="noreferrer">Open original publication <ExternalLink size={14}/></a>}
     </div>
@@ -263,7 +286,8 @@ function Sources() {
   const filtered=sources.filter(s=>`${s.title} ${s.publisher} ${s.doi_or_ntrs_id} ${s.id}`.toLowerCase().includes(query.toLowerCase()));
   return <main className="page-wrap"><PageTitle index="04 / 05" eyebrow="RESEARCH WORKSPACE / 04" title="Sources & evidence." subtitle="Trace reviewed claims to source publications, evidence records, and page-level locators."/>
     <div className="source-search panel"><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search source title, publisher, DOI, or ID…"/><span>{filtered.length} sources</span></div>
-    {error&&<div className="error-banner"><CircleAlert/>{error}</div>}{loading?<div className="loading-state panel"><LoaderCircle className="spin"/>Loading source manifest…</div>:<div className="source-list">{filtered.map(source=><article className="source-card panel" key={source.id}><div className="source-icon"><FileText/></div><div className="source-content"><small>{source.id} · {source.publisher}</small><h3>{source.title}</h3><p>{source.doi_or_ntrs_id} · Version {source.version}</p><div className="source-meta"><span>Accessed {source.accessed_date}</span><span>{source.reuse_terms}</span></div>{source.url&&/^https?:\/\//i.test(source.url)&&<a href={source.url} target="_blank" rel="noreferrer">Open publication <ExternalLink size={13}/></a>}</div></article>)}</div>}
+    {error&&<div className="error-banner" role="alert"><CircleAlert/>{error}</div>}
+    {loading?<div className="loading-state panel" aria-live="polite"><LoaderCircle className="spin"/>Loading source manifest…</div>:filtered.length===0?<div className="empty-state panel"><div className="empty-icon"><Search/></div><h2>No sources match that search.</h2><p>Try a source title, publisher, DOI, or source ID.</p></div>:<div className="source-list">{filtered.map(source=><article className="source-card panel" key={source.id}><div className="source-icon"><FileText/></div><div className="source-content"><small>{source.id} · {source.publisher}</small><h3>{source.title}</h3><p>{source.doi_or_ntrs_id} · Version {source.version}</p><div className="source-meta"><span>Accessed {source.accessed_date}</span><span>{source.reuse_terms}</span></div>{source.url&&/^https?:\/\//i.test(source.url)&&<a href={source.url} target="_blank" rel="noreferrer">Open publication <ExternalLink size={13}/></a>}</div></article>)}</div>}
     {data&&<section className="panel evidence-index"><p className="eyebrow">EVIDENCE INDEX</p><h2>Evidence records in the active catalog</h2><p>Open evidence from the records returned by the backend. Each record retains its original scope and quality flag.</p><div className="evidence-buttons">{Object.entries(data.evidence_drawers||{}).slice(0,30).map(([key,items]:[string,any])=>(items||[]).slice(0,2).map((item:AnyRecord,i:number)=><button key={`${key}-${i}`} onClick={()=>evidence.open(item)}><BookOpen size={13}/>{item.evidence_id} <small>{key}</small></button>))}</div></section>}
     <EvidenceDrawer item={evidence.active} onClose={evidence.close}/>
   </main>;
