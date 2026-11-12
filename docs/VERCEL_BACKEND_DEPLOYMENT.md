@@ -1,9 +1,11 @@
 # FlameFall backend on Vercel
 
-The backend deploys from the repository root as a single Express Vercel
-Function. `src/index.ts` exports the existing Express app; it never opens a
-listener. Local `npm run dev` and `npm start` continue to start `src/server.ts`
-and listen on `PORT` (4000 by default).
+The backend deploys from the repository root as a single catch-all Vercel
+Function. `api/[...path].ts` forwards to `src/index.ts`, which default-exports
+the existing Express app and never opens a listener. Framework auto-detection
+is disabled so Vercel cannot select `src/app.ts` as its entrypoint. Local
+`npm run dev` and `npm start` continue to start `src/server.ts` and listen on
+`PORT` (4000 by default).
 
 ## Vercel project settings
 
@@ -11,7 +13,7 @@ Connect `mariam-29/FlameFall` to a separate Vercel project for the backend, on
 the `main` branch. Set:
 
 - Root Directory: `.` (repository root)
-- Framework Preset: Express
+- Framework Preset: Other (`vercel.json` sets `framework` to `null`)
 - Install Command: `npm ci`
 - Build Command: `npm run build:vercel`
 - Output Directory: leave unset

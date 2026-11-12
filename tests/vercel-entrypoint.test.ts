@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import app from "../src/index";
+import app from "../api/[...path]";
 
 describe("Vercel Express entrypoint", () => {
   it("serves the health route through the exported application", async () => {
