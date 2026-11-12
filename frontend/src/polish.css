@@ -9,6 +9,16 @@
   --motion-fast: 150ms;
   --motion-medium: 230ms;
   --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --type-hero: clamp(4rem, 5.3vw, 4.75rem);
+  --type-page: clamp(2.5rem, 3.25vw, 3rem);
+  --type-section: clamp(1.75rem, 2.5vw, 2.25rem);
+  --type-card: clamp(1.25rem, 1.7vw, 1.5rem);
+  --type-body: clamp(1rem, 1.05vw, 1.125rem);
+  --type-secondary: .9375rem;
+  --type-label: .875rem;
+  --type-button: 1rem;
+  --type-table: .9375rem;
+  --type-meta: .8125rem;
 }
 
 html { scroll-padding-top: 88px; scrollbar-color: #424951 #0c1014; scrollbar-width: thin; }
@@ -98,13 +108,27 @@ details[open] > summary svg { transform: rotate(180deg); }
 }
 
 @media (max-width: 760px) {
+  :root {
+    --type-hero: clamp(2.5rem, 11vw, 3rem);
+    --type-page: clamp(1.875rem, 8vw, 2.25rem);
+    --type-section: clamp(1.5rem, 6.5vw, 1.75rem);
+    --type-card: clamp(1.125rem, 5vw, 1.3125rem);
+    --type-body: 1rem;
+    --type-secondary: .875rem;
+    --type-label: .8125rem;
+    --type-button: .9375rem;
+    --type-table: .875rem;
+    --type-meta: .75rem;
+  }
   .topbar { min-height: 64px; }
   .mobile-menu { width: 44px; height: 44px; border-radius: 8px; }
   .mobile-menu:focus-visible { outline-offset: -2px; }
   .nav-links a { min-height: 44px; }
   .source-link, .feature-grid a, .export-links a, .hero-chips a, .header-download { min-height: 44px; }
   .hero { min-height: 690px; }
-  .hero h1 { font-size: clamp(2.75rem, 11vw, 3.25rem); }
+  .hero h1 { font-size: var(--type-hero); }
+  .page-heading h1 { font-size: var(--type-page); }
+  .landing-section h2 { font-size: var(--type-section); }
   .page-wrap { padding-top: 32px; }
   .scenario-panel { padding: 18px; }
   .filter-bar .primary-button { min-height: 44px; }
@@ -114,6 +138,11 @@ details[open] > summary svg { transform: rotate(180deg); }
   .drawer-body { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
   .evidence-drawer { width: min(480px, 100%); }
   .applicability-row { gap: 10px; }
+}
+
+@media (max-width: 1050px) {
+  .header-download { font-size: 0; }
+  .header-download svg { width: 18px; height: 18px; }
 }
 
 @media (max-width: 380px) {
@@ -133,4 +162,97 @@ details[open] > summary svg { transform: rotate(180deg); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Typography scale is kept last so legacy component rules cannot shrink it. */
+body { font-size: var(--type-body); line-height: 1.65; }
+.hero h1 { font-size: var(--type-hero); line-height: 1.04; letter-spacing: -.045em; }
+.page-heading h1 { font-size: var(--type-page); line-height: 1.12; letter-spacing: -.04em; }
+.landing-section h2, .section-head h2, .sequence-panel h2, .exports-panel h2,
+.provenance-panel h2, .evidence-index h2 { font-size: var(--type-section); line-height: 1.2; letter-spacing: -.025em; }
+.health-card h2, .confounders h2, .empty-state h2 { font-size: var(--type-card); line-height: 1.25; }
+.runs-toolbar h2, .comparison-summary h2 { font-size: var(--type-section); line-height: 1.25; }
+.drawer-head h2 { font-size: var(--type-card); line-height: 1.3; }
+.investigation-top h3, .run-card h3, .source-content h3, .comparison-section h3,
+.claim-section h3, .feature-grid h3 { font-size: clamp(1.25rem, 1.65vw, 1.5rem); line-height: 1.35; letter-spacing: -.015em; }
+.hero-lead, .section-lead, .page-heading > div > p:last-child,
+.investigation-card > p, .claim-card > p, .comparison-summary p:not(.eyebrow),
+.source-content p, .provenance-panel li, .sequence-panel > div:first-child > p:not(.eyebrow),
+.empty-state p, .health-card p:not(.eyebrow), .notice-card p, .warning-card p,
+.applicability-row > div p, .feature-grid p, .joint-card p:not(.eyebrow) { font-size: var(--type-body); line-height: 1.7; }
+.notice-card b, .warning-card b { font-size: var(--type-secondary); line-height: 1.45; }
+.scenario-panel label, .filter-bar label, .compare-selectors label,
+.applicability-row > b { font-size: var(--type-label); line-height: 1.45; }
+.scenario-panel input, .scenario-panel select, .scenario-panel textarea,
+.filter-bar select, .compare-selectors select, .hero-search input, .source-search input { font-size: 1rem; }
+.primary-button, .secondary-button, .text-button, .pin-button, .copy-button,
+.citation-list button, .evidence-buttons button, .header-download,
+.source-link, .hero-chips a, .feature-grid a { font-size: var(--type-button); line-height: 1.35; }
+td { font-size: var(--type-table); line-height: 1.55; }
+th { font-size: var(--type-meta); line-height: 1.45; }
+.eyebrow, .feature-grid small, .investigation-top small, .source-content > small,
+.investigation-meta, .source-meta, .form-footnote, .muted, .status,
+.catalog-strip, .mode-line, .page-index, .hero-foot, .phase-list span,
+.metric-card small, .runs-toolbar > span, .applicability-row > small,
+.relevance-score small, .run-values small, .phase-list small,
+.numeric-facts small, .evidence-buttons small, .source-search > span,
+.versus, .footer { font-size: var(--type-meta); line-height: 1.5; }
+.detail-row, .evidence-copy-row { font-size: var(--type-secondary); line-height: 1.55; }
+.detail-row span { font-size: var(--type-meta); }
+.evidence-fact { font-size: var(--type-body); line-height: 1.7; }
+.numeric-facts b, .applicability-row > span, .run-card > p { font-size: var(--type-secondary); line-height: 1.5; }
+.run-values b { font-size: var(--type-secondary); line-height: 1.45; }
+.investigation-card details p, .investigation-card details li { font-size: var(--type-secondary); line-height: 1.65; }
+.investigation-card summary { font-size: var(--type-label); line-height: 1.5; }
+.nav-links { font-size: var(--type-secondary); line-height: 1.4; }
+.brand small { font-size: var(--type-meta); line-height: 1.35; }
+.section-head > span { font-size: var(--type-meta); line-height: 1.5; }
+.run-id { font-size: var(--type-meta); line-height: 1.5; }
+.error-banner { font-size: var(--type-body); line-height: 1.5; }
+.error-banner button { font-size: var(--type-button); line-height: 1.35; }
+.loading-state { font-size: var(--type-body); line-height: 1.5; }
+.loading-inline { font-size: var(--type-secondary); line-height: 1.5; }
+.source-search > span { white-space: nowrap; }
+.joint-card h3 { font-size: var(--type-card); line-height: 1.3; }
+.page-index { padding-bottom: 8px; }
+.scenario-panel, .investigation-card, .run-card, .source-card,
+.comparison-section, .applicability-panel, .sequence-panel, .evidence-index,
+.exports-panel, .provenance-panel { padding: clamp(20px, 2.2vw, 28px); }
+.claim-card, .comparison-summary { padding: 20px 22px; }
+
+@media (max-width: 1050px) {
+  .header-download { font-size: 0; }
+  .nav-links { font-size: var(--type-secondary); }
+  .brand small { font-size: var(--type-meta); }
+  .investigation-top h3, .run-card h3, .source-content h3,
+  .comparison-section h3, .claim-section h3, .feature-grid h3 { font-size: clamp(1.125rem, 4.8vw, 1.3125rem); }
+  .error-banner { font-size: var(--type-body); }
+  .error-banner button { font-size: var(--type-button); }
+  .loading-state { font-size: var(--type-body); }
+  .scenario-panel, .investigation-card, .run-card, .source-card,
+  .comparison-section, .applicability-panel, .sequence-panel, .evidence-index,
+  .exports-panel, .provenance-panel { padding: 18px; }
+  .header-download svg { width: 18px; height: 18px; }
+}
+
+@media (max-width: 760px) {
+  body { font-size: 1rem; }
+  .hero h1 { font-size: var(--type-hero); }
+  .page-heading h1 { font-size: var(--type-page); }
+  .landing-section h2 { font-size: var(--type-section); }
+  .hero-lead, .section-lead, .page-heading > div > p:last-child,
+  .investigation-card > p, .claim-card > p, .comparison-summary p:not(.eyebrow),
+  .source-content p, .provenance-panel li, .sequence-panel > div:first-child > p:not(.eyebrow),
+  .empty-state p, .health-card p:not(.eyebrow), .notice-card p, .warning-card p,
+  .applicability-row > div p, .feature-grid p, .joint-card p:not(.eyebrow) { font-size: var(--type-body); }
+  .scenario-panel label, .filter-bar label, .compare-selectors label,
+  .applicability-row > b { font-size: var(--type-label); }
+  .primary-button, .secondary-button, .text-button, .pin-button, .copy-button,
+  .citation-list button, .evidence-buttons button, .source-link,
+  .hero-chips a, .feature-grid a { font-size: var(--type-button); }
+  td { font-size: var(--type-table); }
+  th { font-size: var(--type-meta); }
+  .header-download { font-size: 0; }
+  .scenario-panel input, .scenario-panel select, .scenario-panel textarea,
+  .filter-bar select, .compare-selectors select, .hero-search input, .source-search input { font-size: 1rem; }
 }
