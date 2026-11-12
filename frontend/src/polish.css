@@ -220,7 +220,21 @@ th { font-size: var(--type-meta); line-height: 1.45; }
 .exports-panel, .provenance-panel { padding: clamp(20px, 2.2vw, 28px); }
 .claim-card, .comparison-summary { padding: 20px 22px; }
 
+/* Landing hero uses the supplied FlameFall space research artwork. */
+.hero {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(90deg, #090b0e 0%, rgba(9, 11, 14, .94) 29%, rgba(9, 11, 14, .72) 48%, rgba(9, 11, 14, .12) 78%, rgba(9, 11, 14, .05) 100%),
+    url('/images/flamefall-hero.png');
+  background-size: cover;
+  background-position: center;
+}
+.hero-art { z-index: 1; background: none; pointer-events: none; }
+.fire-orb, .orb-ring { display: none; }
+.evidence-float { pointer-events: auto; }
+
 @media (max-width: 1050px) {
+  .hero { background-position: 68% center; }
   .header-download { font-size: 0; }
   .nav-links { font-size: var(--type-secondary); }
   .brand small { font-size: var(--type-meta); }
@@ -236,6 +250,13 @@ th { font-size: var(--type-meta); line-height: 1.45; }
 }
 
 @media (max-width: 760px) {
+  .hero {
+    background-image:
+      linear-gradient(90deg, rgba(9, 11, 14, .92) 0%, rgba(9, 11, 14, .78) 54%, rgba(9, 11, 14, .22) 100%),
+      linear-gradient(0deg, #090b0e 0%, rgba(9, 11, 14, .24) 34%, transparent 75%),
+      url('/images/flamefall-hero.png');
+    background-position: 76% center;
+  }
   body { font-size: 1rem; }
   .hero h1 { font-size: var(--type-hero); }
   .page-heading h1 { font-size: var(--type-page); }
