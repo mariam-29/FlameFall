@@ -6,6 +6,9 @@
   "functions": {
     "api/[...path].ts": {
       "includeFiles": "{data/generated/catalog.json,public/exports/**}"
+    },
+    "api/export/[type].ts": {
+      "includeFiles": "{data/generated/catalog.json,public/exports/**}"
     }
   }
 }

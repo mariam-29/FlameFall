@@ -35,6 +35,15 @@ interface TestHttpResponse {
   body: any;
 }
 
+const pythonCompilerAvailable = (() => {
+  try {
+    execFileSync("python", ["--version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
 class ExpressTestRequest implements PromiseLike<TestHttpResponse> {
   private headers: Record<string, string> = {};
   private payloadChunks: Buffer[] = [];
@@ -1140,7 +1149,7 @@ describe("Flame Trace Backend — NASA Space Apps 2026 Full Verification Suite",
     expect(healthRes.body.counts).toEqual(manifestRes.body.counts);
   });
 
-  it("Compiler Gate: scripts/build_data.py rejects broken provenance, invalid units, and out-of-order phase ordinals", () => {
+  it.skipIf(!pythonCompilerAvailable)("Compiler Gate: scripts/build_data.py rejects broken provenance, invalid units, and out-of-order phase ordinals", () => {
     const tmpDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "flame-trace-compiler-test-")
     );

@@ -1,9 +1,11 @@
 # FlameFall backend on Vercel
 
-The backend deploys from the repository root as a single catch-all Vercel
-Function. `api/[...path].ts` forwards to `src/index.ts`, which default-exports
-the existing Express app and never opens a listener. Framework auto-detection
-is disabled so Vercel cannot select `src/app.ts` as its entrypoint. Local
+The backend deploys from the repository root as Vercel Functions.
+`api/[...path].ts` forwards the top-level API routes to `src/index.ts`, and
+`api/export/[type].ts` explicitly routes the nested export URLs to the same
+Express app. Both entrypoints include the catalog and public export artifacts.
+Framework auto-detection is disabled so Vercel cannot select `src/app.ts` as
+its entrypoint. Local
 `npm run dev` and `npm start` continue to start `src/server.ts` and listen on
 `PORT` (4000 by default).
 

@@ -23,7 +23,7 @@ function isRecord(value: unknown): value is AnyRecord { return typeof value === 
 function validateApiResponse(path: string, value: unknown): AnyRecord {
   if (!isRecord(value)) throw new Error(`Invalid response from ${path}: expected an object`);
   if (path === '/api/health' && (value.status !== 'ok' || typeof value.catalog_version !== 'string' || !isRecord(value.counts) || !isRecord(value.exports))) throw new Error('Invalid health response from the FlameFall API');
-  if (path === '/api/export/manifest' && (typeof value.catalog_version !== 'string' || !isRecord(value.sources) || !isRecord(value.counts))) throw new Error('Invalid source manifest returned by the FlameFall API');
+  if (path === '/api/export/manifest' && (typeof value.catalog_version !== 'string' || !isRecord(value.sources) || !isRecord(value.counts) || !isRecord(value.evidence_locators))) throw new Error('Invalid source manifest returned by the FlameFall API');
   if ((path === '/api/evaluate' || path === '/api/explain') && (typeof value.catalog_version !== 'string' || !Array.isArray(value.ranked_investigations) || !isRecord(value.applicability))) throw new Error(`Invalid ${path.slice(5)} response returned by the FlameFall API`);
   if (path === '/api/explain' && (!isRecord(value.explanation) || !Array.isArray(value.citations))) throw new Error('Invalid explanation response returned by the FlameFall API');
   return value;
@@ -39,11 +39,32 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (!parsed.success) throw new Error(`Request does not match the backend contract: ${parsed.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`);
     request = { ...init, body: JSON.stringify(parsed.data) };
   }
-  const response = await fetch(`${API_BASE}${path}`, { ...request, headers: { ...(request.body ? { 'Content-Type': 'application/json' } : {}), ...request.headers } });
+  let response: Response;
+  const callerSignal=request.signal;
+  const fetchController=new AbortController();
+  let timedOut=false;
+  const abortFromCaller=()=>fetchController.abort(callerSignal?.reason);
+  if(callerSignal?.aborted)abortFromCaller();
+  else callerSignal?.addEventListener('abort',abortFromCaller,{once:true});
+  const timeoutId=window.setTimeout(()=>{timedOut=true;fetchController.abort();},20000);
+  try {
+    response = await fetch(`${API_BASE}${path}`, { ...request, signal:fetchController.signal, headers: { ...(request.body ? { 'Content-Type': 'application/json' } : {}), ...request.headers } });
+  } catch (cause) {
+    if(callerSignal?.aborted)throw cause;
+    if(timedOut)throw new Error(`The FlameFall API request ${path} timed out after 20 seconds. Retry the request or check backend availability.`);
+    if ((cause as Error)?.name === 'AbortError') throw cause;
+    const backend = API_BASE || (typeof window !== 'undefined' ? window.location.origin : 'the current site');
+    throw new Error(`Could not reach the FlameFall API at ${backend}${path}. Check VITE_API_BASE_URL, CORS, and backend availability.`);
+  } finally {
+    window.clearTimeout(timeoutId);
+    callerSignal?.removeEventListener('abort',abortFromCaller);
+  }
   if (!response.ok) {
     let payload: AnyRecord = {};
-    try { payload = await response.json(); } catch { /* non-JSON error */ }
-    const error = new Error(payload.error || `Request failed (${response.status})`) as Error & { status?: number; payload?: AnyRecord };
+    let detail = '';
+    const bodyText = await response.text().catch(() => '');
+    try { payload = JSON.parse(bodyText) as AnyRecord; } catch { detail = bodyText.slice(0, 300); }
+    const error = new Error(payload.error || detail || `Request failed (${response.status})`) as Error & { status?: number; payload?: AnyRecord };
     error.status = response.status;
     error.payload = payload;
     throw error;
@@ -138,7 +159,7 @@ function EvidenceDrawer({ item, onClose }: { item: AnyRecord | null; onClose: ()
     <div className="drawer-body"><div className="evidence-fact">{item.reviewed_fact || item.statement || 'No reviewed fact is available for this record.'}</div>
       {item.evidence_id && <div className="evidence-copy-row"><span>Evidence ID</span><button className="copy-button" onClick={() => void copyEvidenceId()}><Copy size={14}/>{copyState === 'Evidence ID copied' ? 'Copied' : 'Copy ID'}</button><span className="sr-only" role="status" aria-live="polite">{copyState}</span></div>}
       <Detail label="Source" value={item.source_title}/><Detail label="DOI / NTRS ID" value={item.doi_or_ntrs_id}/><Detail label="Record" value={item.record_id}/><Detail label="Scope" value={item.scope}/><Detail label="Page" value={item.page_display || item.printed_page || item.pdf_page}/><Detail label="Locator" value={item.locator_detail}/><Detail label="Quality" value={item.quality_flag}/><Detail label="Measurement basis" value={item.measurement_basis}/><Detail label="Original value" value={[item.original_value,item.original_unit].filter(Boolean).join(' ')}/><Detail label="Normalized value" value={[item.normalized_value,item.normalized_unit].filter(v => v !== null && v !== undefined).join(' ')}/>
-      {sourceUrl && <a className="source-link" href={sourceUrl} target="_blank" rel="noreferrer">Open original publication <ExternalLink size={14}/></a>}
+      {sourceUrl && <a className="source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">Open original publication <ExternalLink size={14}/></a>}
     </div>
   </aside></div>;
 }
@@ -281,22 +302,51 @@ function Compare() {
 }
 
 function Sources() {
-  const [manifest,setManifest]=useState<Manifest|null>(null);const [data,setData]=useState<Evaluation|null>(null);const [query,setQuery]=useState('');const [loading,setLoading]=useState(true);const [error,setError]=useState('');const evidence=useEvidence();
-  useEffect(()=>{Promise.all([api<Manifest>('/api/export/manifest'),api<Evaluation>('/api/evaluate',{method:'POST',body:JSON.stringify({})})]).then(([m,d])=>{setManifest(m);setData(d);}).catch(e=>setError((e as Error).message)).finally(()=>setLoading(false));},[]);
-  const sources:Source[] = Object.values(manifest?.sources || {});
-  const filtered=sources.filter(s=>`${s.title} ${s.publisher} ${s.doi_or_ntrs_id} ${s.id}`.toLowerCase().includes(query.toLowerCase()));
+  const [manifest,setManifest]=useState<Manifest|null>(null);
+  const [data,setData]=useState<Evaluation|null>(null);
+  const [query,setQuery]=useState('');
+  const [manifestLoading,setManifestLoading]=useState(true);
+  const [evidenceLoading,setEvidenceLoading]=useState(true);
+  const [manifestError,setManifestError]=useState('');
+  const [evidenceError,setEvidenceError]=useState('');
+  const evidence=useEvidence();
+  const loadManifest=useCallback(async(signal?:AbortSignal)=>{
+    setManifestLoading(true);setManifestError('');
+    try{setManifest(await api<Manifest>('/api/export/manifest',{signal}));}
+    catch(error){if(!signal?.aborted)setManifestError((error as Error).message);}
+    finally{if(!signal?.aborted)setManifestLoading(false);}
+  },[]);
+  const loadEvidence=useCallback(async(signal?:AbortSignal)=>{
+    setEvidenceLoading(true);setEvidenceError('');
+    try{setData(await api<Evaluation>('/api/evaluate',{method:'POST',body:JSON.stringify({}),signal}));}
+    catch(error){if(!signal?.aborted)setEvidenceError((error as Error).message);}
+    finally{if(!signal?.aborted)setEvidenceLoading(false);}
+  },[]);
+  useEffect(()=>{
+    const manifestController=new AbortController();
+    const evidenceController=new AbortController();
+    void loadManifest(manifestController.signal);
+    void loadEvidence(evidenceController.signal);
+    return()=>{manifestController.abort();evidenceController.abort();};
+  },[loadManifest,loadEvidence]);
+  const sources:Source[] = manifest ? Object.values(manifest.sources) : [];
+  const normalizedQuery=query.trim().toLocaleLowerCase();
+  const filtered=sources.filter(s=>`${s.title} ${s.publisher} ${s.doi_or_ntrs_id} ${s.id}`.toLocaleLowerCase().includes(normalizedQuery));
+  const evidenceItems=Object.entries(data?.evidence_drawers||{}).slice(0,30).flatMap(([key,items]:[string,any])=>(items||[]).slice(0,2).map((item:AnyRecord,i:number)=>({key:`${key}-${i}`,item,group:key})));
   return <main className="page-wrap"><PageTitle index="04 / 05" eyebrow="RESEARCH WORKSPACE / 04" title="Sources & evidence." subtitle="Trace reviewed claims to source publications, evidence records, and page-level locators."/>
-    <div className="source-search panel"><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search source title, publisher, DOI, or ID…"/><span>{filtered.length} sources</span></div>
-    {error&&<div className="error-banner" role="alert"><CircleAlert/>{error}</div>}
-    {loading?<div className="loading-state panel" aria-live="polite"><LoaderCircle className="spin"/>Loading source manifest…</div>:filtered.length===0?<div className="empty-state panel"><div className="empty-icon"><Search/></div><h2>No sources match that search.</h2><p>Try a source title, publisher, DOI, or source ID.</p></div>:<div className="source-list">{filtered.map(source=><article className="source-card panel" key={source.id}><div className="source-icon"><FileText/></div><div className="source-content"><small>{source.id} · {source.publisher}</small><h3>{source.title}</h3><p>{source.doi_or_ntrs_id} · Version {source.version}</p><div className="source-meta"><span>Accessed {source.accessed_date}</span><span>{source.reuse_terms}</span></div>{source.url&&/^https?:\/\//i.test(source.url)&&<a href={source.url} target="_blank" rel="noreferrer">Open publication <ExternalLink size={13}/></a>}</div></article>)}</div>}
-    {data&&<section className="panel evidence-index"><p className="eyebrow">EVIDENCE INDEX</p><h2>Evidence records in the active catalog</h2><p>Open evidence from the records returned by the backend. Each record retains its original scope and quality flag.</p><div className="evidence-buttons">{Object.entries(data.evidence_drawers||{}).slice(0,30).map(([key,items]:[string,any])=>(items||[]).slice(0,2).map((item:AnyRecord,i:number)=><button key={`${key}-${i}`} onClick={()=>evidence.open(item)}><BookOpen size={13}/>{item.evidence_id} <small>{key}</small></button>))}</div></section>}
+    <div className="source-search panel"><Search/><input aria-label="Search sources" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search source title, publisher, DOI, or ID…"/><span aria-live="polite">{manifestLoading?'Loading sources…':manifestError?'Sources unavailable':`${filtered.length} ${filtered.length===1?'source':'sources'}`}</span></div>
+    {manifestLoading?<div className="loading-state panel" aria-live="polite"><LoaderCircle className="spin"/>Loading source manifest…</div>:manifestError?<div className="error-banner" role="alert"><CircleAlert/><span>Unable to load sources: {manifestError}</span><button type="button" onClick={()=>void loadManifest()}>Retry sources</button></div>:filtered.length===0?<div className="empty-state panel"><div className="empty-icon"><Search/></div><h2>{sources.length===0?'No sources are available in this catalog.':'No sources match that search.'}</h2><p>{sources.length===0?'The manifest loaded successfully but contains no source records.':'Try a source title, publisher, DOI, or source ID.'}</p></div>:<div className="source-list">{filtered.map(source=><article className="source-card panel" key={source.id}><div className="source-icon"><FileText/></div><div className="source-content"><small>{source.id} · {source.publisher}</small><h3>{source.title}</h3><p>{source.doi_or_ntrs_id} · Version {source.version}</p><div className="source-meta"><span>Accessed {source.accessed_date}</span><span>{source.reuse_terms}</span></div>{source.url&&/^https?:\/\//i.test(source.url)&&<a href={source.url} target="_blank" rel="noopener noreferrer">Open publication <ExternalLink size={13}/></a>}</div></article>)}</div>}
+    <section className="panel evidence-index"><p className="eyebrow">EVIDENCE INDEX</p><h2>Evidence records in the active catalog</h2><p>Open evidence from the records returned by the backend. Each record retains its original scope and quality flag.</p>
+      {evidenceLoading?<div className="loading-inline" aria-live="polite"><LoaderCircle className="spin"/>Loading evidence records…</div>:evidenceError?<div className="error-banner" role="alert"><CircleAlert/><span>Unable to load evidence records: {evidenceError}</span><button type="button" onClick={()=>void loadEvidence()}>Retry evidence</button></div>:evidenceItems.length===0?<p className="muted">The evaluation loaded successfully but returned no evidence records.</p>:<div className="evidence-buttons">{evidenceItems.map(({key,item,group})=><button key={key} onClick={()=>evidence.open(item)}><BookOpen size={13}/>{item.evidence_id} <small>{group}</small></button>)}</div>}
+    </section>
     <EvidenceDrawer item={evidence.active} onClose={evidence.close}/>
   </main>;
 }
 
 function About() {
-  const {health,error,refresh}=useHealth();const [manifest,setManifest]=useState<Manifest|null>(null);
-  useEffect(()=>{api<Manifest>('/api/export/manifest').then(setManifest).catch(()=>undefined);},[]);
+  const {health,error,refresh}=useHealth();const [manifest,setManifest]=useState<Manifest|null>(null);const [manifestLoading,setManifestLoading]=useState(true);const [manifestError,setManifestError]=useState('');
+  const loadManifest=useCallback(async()=>{setManifestLoading(true);setManifestError('');try{setManifest(await api<Manifest>('/api/export/manifest'));}catch(e){setManifestError((e as Error).message);}finally{setManifestLoading(false);}},[]);
+  useEffect(()=>{void loadManifest();},[loadManifest]);
   const exclusionCount=manifest ? manifest.exclusions.length : 0;
   const counts=health?.counts||{};const exports=[['runs_csv','Runs · CSV'],['phases_csv','Phases · CSV'],['data_dictionary_json','Data dictionary · JSON'],['manifest_json','Source manifest · JSON']];
   return <main className="page-wrap"><PageTitle index="05 / 05" eyebrow="RESEARCH WORKSPACE / 05" title="About this collection." subtitle="Understand what the catalog contains, how records are reviewed, and where its coverage ends."/>
@@ -304,7 +354,7 @@ function About() {
     <div className="metric-grid">{[['Sources',counts.sources],['Investigations',counts.investigations],['Verified runs',counts.verified_runs],['Provisional runs',counts.provisional_runs],['Published PMMA cohort',counts.published_pmma_cohort_runs],['Figure phases',counts.phases],['Evidence records',counts.evidence],['Exclusions',counts.exclusions]].map(([label,value])=><div className="metric-card panel" key={String(label)}><small>{label}</small><b>{value ?? '—'}</b></div>)}</div>
     <div className="notice-card"><ShieldCheck size={18}/><div><b>Review status is not the same as experimental coverage.</b><p>Verified run records, published cohort counts, and figure phases describe different evidence units. They must not be combined into one total.</p></div></div>
     <section className="panel exports-panel"><p className="eyebrow">CATALOG EXPORTS</p><h2>Download the source data</h2><p>Exports are generated by the backend and identify the catalog version used for the download.</p><div className="export-links">{exports.map(([key,label])=>{const path=health?.exports?.[key];return <a key={key} href={path?`${API_BASE}${path}`:'#'} onClick={e=>{if(!path)e.preventDefault();}} className={!path?'disabled':''}><ArrowDownToLine size={15}/>{label}<ArrowUpRight size={13}/></a>;})}</div></section>
-    <section className="panel provenance-panel"><p className="eyebrow">PROVENANCE & LIMITATIONS</p><h2>Read the evidence in context.</h2><ul><li>Verified, provisional, approximate, assumed, and published-reference measurements are distinct.</li><li>Missing pressure or airflow values remain unreported; a proxy measurement must not be relabeled as a direct measurement.</li><li>LUCI shared-chamber observations cannot be attributed to one material independently.</li><li>Study relevance is a catalog ranking, not a prediction or operational safety rating.</li><li>Figure 6.4 phases are a separate experimental sequence, not additional O15 run records.</li></ul>{exclusionCount>0&&<p className="muted">The manifest includes {exclusionCount} exclusion and review records.</p>}</section>
+    <section className="panel provenance-panel"><p className="eyebrow">PROVENANCE & LIMITATIONS</p><h2>Read the evidence in context.</h2><ul><li>Verified, provisional, approximate, assumed, and published-reference measurements are distinct.</li><li>Missing pressure or airflow values remain unreported; a proxy measurement must not be relabeled as a direct measurement.</li><li>LUCI shared-chamber observations cannot be attributed to one material independently.</li><li>Study relevance is a catalog ranking, not a prediction or operational safety rating.</li><li>Figure 6.4 phases are a separate experimental sequence, not additional O15 run records.</li></ul>{exclusionCount>0&&<p className="muted">The manifest includes {exclusionCount} exclusion and review records.</p>}{manifestLoading&&<p className="muted" aria-live="polite">Loading manifest review records…</p>}{manifestError&&<div className="error-banner" role="alert"><CircleAlert/><span>Unable to load manifest review records: {manifestError}</span><button type="button" onClick={()=>void loadManifest()}>Retry manifest</button></div>}</section>
   </main>;
 }
 
