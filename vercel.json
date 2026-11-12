@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build:vercel",
+  "functions": {
+    "src/index.ts": {
+      "includeFiles": "{data/generated/catalog.json,public/exports/**}"
+    }
+  }
+}
