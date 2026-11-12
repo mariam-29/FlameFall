@@ -6,7 +6,7 @@ import {
   GitCompareArrows, Info, LoaderCircle, Menu, RefreshCw, Search, ShieldCheck, SlidersHorizontal,
   X
 } from 'lucide-react';
-import { EvaluateRequestSchema } from '../../src/lib/schema';
+import { EvaluateRequestSchema, ExplainRequestSchema } from './contracts/api-request';
 
 type AnyRecord = Record<string, any>;
 type Evaluation = AnyRecord;
@@ -34,7 +34,8 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if ((path === '/api/evaluate' || path === '/api/explain') && init.method?.toUpperCase() === 'POST' && typeof init.body === 'string') {
     let value: unknown;
     try { value = JSON.parse(init.body); } catch { throw new Error(`Invalid JSON request for ${path}`); }
-    const parsed = EvaluateRequestSchema.safeParse(value);
+    const requestSchema = path === '/api/explain' ? ExplainRequestSchema : EvaluateRequestSchema;
+    const parsed = requestSchema.safeParse(value);
     if (!parsed.success) throw new Error(`Request does not match the backend contract: ${parsed.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`);
     request = { ...init, body: JSON.stringify(parsed.data) };
   }
