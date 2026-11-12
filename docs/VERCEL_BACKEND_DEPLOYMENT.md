@@ -19,12 +19,12 @@ the `main` branch. Set:
 - Output Directory: leave unset
 - Node.js Version: `24.x`
 
-`vercel.json` already supplies these build settings. The Vercel build compiles
-TypeScript using Node only; it does not require Python. It uses the committed,
-generated catalog and export artifacts. When scientific source data changes,
-run `npm run build:data` in an environment with Python 3, review and commit the
-regenerated `data/generated/catalog.json` and `public/exports/*` files, then
-deploy. The regular local build, test, and development commands retain the
+`vercel.json` already supplies these build settings. `npm run build:vercel`
+compiles TypeScript without invoking Python and deploys the committed catalog
+and export artifacts. When scientific source data changes, run
+`npm run build:data` in an environment with Python 3, review and commit the
+regenerated `data/generated/catalog.json` and `public/exports/*` files before
+deploying. The regular local build, test, and development commands retain the
 data compiler and its integrity checks.
 
 The deployed function includes `data/generated/catalog.json` and
